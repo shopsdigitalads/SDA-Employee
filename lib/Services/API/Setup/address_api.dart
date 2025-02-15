@@ -12,17 +12,19 @@ class AddressApi {
   String? client_business_id;
   String? address_type;
   String? user_id;
-
+  String? landmark;
+  String? address_line;
   AddressApi(
-      {
-      this.user_id,  
+      {this.user_id,
       this.pin_code,
       this.area,
       this.cluster,
       this.district,
       this.state,
       this.client_business_id,
-      this.address_type});
+      this.address_type,
+      this.landmark,
+      this.address_line});
 
   // Function to fetch data from API based on the entered PIN code
   Future<Map<String, dynamic>> getDataFromPinCode(String pinCode) async {
@@ -54,7 +56,9 @@ class AddressApi {
         "state": state,
         "address_type": address_type,
         "user_id": user_id,
-        "client_business_id": client_business_id
+        "client_business_id": client_business_id,
+        "landmark": landmark,
+        "address_line": address_line
       };
 
       final uri = Uri.parse("$api_link/address");
@@ -113,8 +117,7 @@ class AddressApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateAdderss(int address_id
-     ) async {
+  Future<Map<String, dynamic>> updateAdderss(int address_id) async {
     try {
       String token = await SharePrefs().getToken();
 
@@ -124,6 +127,9 @@ class AddressApi {
         'cluster',
         'district',
         'state',
+        "landmark",
+        "address_line",
+        "update_request"
       ];
 
       List<String?> update_data = [
@@ -132,12 +138,15 @@ class AddressApi {
         cluster,
         district,
         state,
+        landmark,
+        address_line,
+        "Rejected",
         address_id.toString(),
       ];
-    
-      Map<String,dynamic> body={
-        "field":jsonEncode(update_fields),
-        "data":jsonEncode(update_data)
+
+      Map<String, dynamic> body = {
+        "field": jsonEncode(update_fields),
+        "data": jsonEncode(update_data)
       };
       final uri = Uri.parse("$api_link/address");
       final response = await http.put(uri,
@@ -155,15 +164,12 @@ class AddressApi {
     }
   }
 
-  Future<Map<String, dynamic>> updateRequestAddress(String remark,int address_id
-     ) async {
+  Future<Map<String, dynamic>> updateRequestAddress(
+      String remark, int address_id) async {
     try {
       String token = await SharePrefs().getToken();
-    
-      Map<String,dynamic> body={
-        "remark":remark,
-        "address_id":address_id
-      };
+
+      Map<String, dynamic> body = {"remark": remark, "address_id": address_id};
 
       print(body);
       final uri = Uri.parse("$api_link/address/update_request");

@@ -7,7 +7,7 @@ import 'package:sdaemployee/Services/Storage/share_prefs.dart';
 
 class KycApi {
   Future<Map<String, dynamic>> applyForKYC(
-     Map<String, dynamic> user,
+      Map<String, dynamic> user,
       String adhar_card_no,
       File adhar_front_img,
       File adhar_back_img,
@@ -59,7 +59,7 @@ class KycApi {
         contentType: MediaType('image', 'jpeg'), // Specify the MIME type
       );
       request.files.add(pan_i);
-      
+
       final bank_p_img = await http.MultipartFile.fromPath(
         'bank_proof_img', // Field name for the interior image
         bank_proof_img.path,
@@ -85,9 +85,8 @@ class KycApi {
     }
   }
 
-
   Future<Map<String, dynamic>> updateKYC(
-    Map<String, dynamic> user,
+      Map<String, dynamic> user,
       String adhar_card_no,
       File adhar_front_img,
       File adhar_back_img,
@@ -108,12 +107,27 @@ class KycApi {
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
 
-      List<String> update_fields =["adhar_no", "pan_no", "acc_holder_name", "acc_no", "bank_ifsc", "bank_name", "bank_branch_name"];
+      List<String> update_fields = [
+        "adhar_no",
+        "pan_no",
+        "acc_holder_name",
+        "acc_no",
+        "bank_ifsc",
+        "bank_name",
+        "bank_branch_name",
+        "update_request"
+      ];
 
-
-      List<String> update_data = [adhar_card_no,pan_no,acc_holder_name, acc_no,bank_ifsc,bank_name, bank_branch_name,];
-
-  
+      List<String> update_data = [
+        adhar_card_no,
+        pan_no,
+        acc_holder_name,
+        acc_no,
+        bank_ifsc,
+        bank_name,
+        bank_branch_name,
+        "Rejected"
+      ];
 
       request.fields['field'] = jsonEncode(update_fields);
       request.fields['data'] = jsonEncode(update_data);
@@ -141,7 +155,7 @@ class KycApi {
         contentType: MediaType('image', 'jpeg'), // Specify the MIME type
       );
       request.files.add(pan_i);
-      
+
       final bank_p_img = await http.MultipartFile.fromPath(
         'bank_proof_img', // Field name for the interior image
         bank_proof_img.path,
@@ -168,38 +182,31 @@ class KycApi {
     }
   }
 
-
-  Future<Map<String,dynamic>> fetchKYCOfUser(int user_id)async{
+  Future<Map<String, dynamic>> fetchKYCOfUser(int user_id) async {
     try {
       final url = Uri.parse("$api_link/kyc/${user_id}");
-       String token = await SharePrefs().getToken();
+      String token = await SharePrefs().getToken();
       final response = await http.get(
         url,
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token"
-          },
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
       );
 
       final responseData = jsonDecode(response.body);
       return responseData;
     } catch (e) {
-      return {
-        "status":false,
-        "message":"Someting Went Wrong"
-      };
+      return {"status": false, "message": "Someting Went Wrong"};
     }
   }
 
-  Future<Map<String, dynamic>> updateRequestKYC(String remark,int kyc_id
-     ) async {
+  Future<Map<String, dynamic>> updateRequestKYC(
+      String remark, int kyc_id) async {
     try {
       String token = await SharePrefs().getToken();
-    
-      Map<String,dynamic> body={
-        "remark":remark,
-        "kyc_id":kyc_id
-      };
+
+      Map<String, dynamic> body = {"remark": remark, "kyc_id": kyc_id};
 
       print(body);
       final uri = Uri.parse("$api_link/kyc/update_request");

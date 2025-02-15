@@ -10,12 +10,14 @@ class Inputfield {
       required String hintText,
       required IconData prefixIcon,
       required TextInputType keyboardType,
+      int maxLines = 1,
       bool enabled = true}) {
     try {
       return TextFormField(
         enabled: enabled,
         controller: controller,
         keyboardType: keyboardType,
+        maxLines: maxLines,
         decoration: InputDecoration(
           labelText: labelText,
           hintText: hintText,

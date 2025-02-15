@@ -37,7 +37,7 @@ class _ViewAddressState extends State<ViewAddress> {
 
       if (res['status']) {
         if (res['address'].isEmpty) {
-          ScreenRouter.replaceScreen(context, Address(user_id:widget.user_id, isUpdate: false, isBusiness: false));
+          ScreenRouter.replaceScreen(context, Address(user_id:widget.user_id, isUpdate: false, isBusiness: false,address_type: "Home",));
         } else {
           setState(() {
             isLoading = false;

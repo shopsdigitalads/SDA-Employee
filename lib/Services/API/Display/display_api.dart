@@ -99,9 +99,9 @@ class DisplayApi {
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
 
-      List<String> update_fields = ["display_type_id", "client_business_id"];
+         List<String> update_fields = ["display_type_id", "client_business_id","update_request"];
 
-      List<String> update_data = [display_type_id, client_business_id];
+      List<String> update_data = [display_type_id,client_business_id,"Rejected"];
 
       request.fields['field'] = jsonEncode(update_fields);
       request.fields['client_business_name'] = clinet_business_name;

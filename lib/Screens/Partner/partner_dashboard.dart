@@ -339,7 +339,26 @@ class PartnerDashboard {
             ),
             SizedBox(height: 8),
 
-            Row(
+           
+
+            // Display Action Button (only if inactive)
+            // Display Action Button (only if inactive)
+            ((display['display_status'] == "Rejected" ||
+                    display['display_status'] == "Inactive"))
+                ? Buttons().actionButton(
+                    color: Colors.orangeAccent,
+                    title: "Update Display",
+                    onPressed: () {
+                          ScreenRouter.addScreen(
+                              context,
+                              RegisterDisplay(
+                                user: user,
+                                isUpdate: true,
+                                client_business_id: client_business_id,
+                                client_business_name: client_business_name,
+                                display_id: display['display_id'],
+                              ));
+                        },): Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Buttons().actionButton(
@@ -391,28 +410,6 @@ class PartnerDashboard {
                         
               ],
             ),
-
-            // Display Action Button (only if inactive)
-            if (display['display_status'] == "Rejected" ||
-                display['display_status'] == "Inactive") ...[
-              ElevatedButton(
-                onPressed: () {
-                  print("Update Display ${display['displayId']} clicked!");
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orangeAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                ),
-                child: Text(
-                  "Update Display",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
           ],
         ),
       );

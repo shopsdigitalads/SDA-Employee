@@ -18,6 +18,8 @@ class Address extends StatefulWidget {
   String? google_map_locatin;
   String? address_type;
   int? address_id;
+  String? landmark;
+  String? address_line;
   bool isUpdate;
   bool isBusiness;
   Address(
@@ -30,6 +32,8 @@ class Address extends StatefulWidget {
       this.google_map_locatin,
       this.address_type,
       this.address_id,
+      this.address_line,
+      this.landmark,
       required this.isUpdate,
       required this.isBusiness,
       required this.user_id});
@@ -44,7 +48,8 @@ class _AddressState extends State<Address> {
   TextEditingController _district = TextEditingController();
   TextEditingController _state = TextEditingController();
   TextEditingController _a = TextEditingController();
-
+  TextEditingController _landmark = TextEditingController();
+  TextEditingController _address_line = TextEditingController();
   List<dynamic> _areas = [];
   String? _selectedArea;
   bool _isLoading = false;
@@ -60,6 +65,8 @@ class _AddressState extends State<Address> {
     _selectedArea = widget.area ?? "";
     _state = TextEditingController(text: widget.state ?? "");
     _a = TextEditingController(text: widget.area ?? '');
+    _landmark = TextEditingController(text: widget.landmark ?? "");
+    _address_line = TextEditingController(text: widget.address_line ?? "");
   }
 
   void _onPinCodeChanged(String value) async {
@@ -104,17 +111,48 @@ class _AddressState extends State<Address> {
 
   void submitAddress() async {
     try {
+      if (_landmark.text.isEmpty) {
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Enter Landmark");
+        return;
+      } else if (_address_line.text.isEmpty) {
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Enter Address");
+        return;
+      } else if (_pinCode.text.isEmpty) {
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Enter Pin Code");
+        return;
+      } else if (_selectedArea == null) {
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Select Area");
+        return;
+      }
       setState(() {
         _isLoading = true;
       });
       AddressApi addressApi = AddressApi(
-        user_id:widget.user_id,
+          user_id: widget.user_id,
           pin_code: _pinCode.text,
           area: _selectedArea,
           cluster: _cluster.text,
           district: _district.text,
           state: _state.text,
-          address_type: widget.isBusiness?"Business":"Home");
+          address_type: widget.isBusiness ? "Business" : "Home",
+          landmark: _landmark.text,
+          address_line: _address_line.text);
       Map<String, dynamic> res;
       if (widget.isUpdate) {
         res = await addressApi.updateAdderss(widget.address_id!);
@@ -187,6 +225,15 @@ class _AddressState extends State<Address> {
                       // letterSpacing: 1,
                     ),
                   ),
+                ),
+                SizedBox(height: 10),
+                Inputfield().textFieldInput(
+                  context: context,
+                  controller: _landmark,
+                  labelText: "Landmark",
+                  hintText: "Near by location",
+                  prefixIcon: Icons.mark_as_unread,
+                  keyboardType: TextInputType.text,
                 ),
                 SizedBox(height: 10),
                 TextFormField(
@@ -278,6 +325,16 @@ class _AddressState extends State<Address> {
                   prefixIcon: Icons.map,
                   keyboardType: TextInputType.text,
                   enabled: false,
+                ),
+                SizedBox(height: 15),
+                 Inputfield().textFieldInput(
+                  context: context,
+                  controller: _address_line,
+                  labelText: "Address Line 1",
+                  hintText: "Near by location",
+                  prefixIcon: Icons.circle,
+                  keyboardType: TextInputType.text,
+                  maxLines: 4
                 ),
                 SizedBox(height: 15),
                 Buttons().submitButton(

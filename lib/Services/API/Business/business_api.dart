@@ -36,7 +36,9 @@ class BusinessApi {
       String area,
       String cluster,
       String district,
-      String state) async {
+      String state,
+      String landmark,
+      String address_line) async {
     try {
       String token = await SharePrefs().getToken();
 
@@ -53,6 +55,8 @@ class BusinessApi {
       request.fields['cluster'] = cluster;
       request.fields['district'] = district;
       request.fields['state'] = state;
+      request.fields['landmark'] = landmark;
+      request.fields['address_line'] = address_line;
       request.fields['address_type'] = "Business";
       request.fields['user_id'] = user["user_id"].toString();
       request.fields['name'] =
@@ -125,11 +129,16 @@ class BusinessApi {
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Content-Type'] = 'multipart/form-data';
 
-      List<String> update_fields = ["client_business_name", "business_type_id"];
+      List<String> update_fields = [
+        "client_business_name",
+        "business_type_id",
+        "update_request"
+      ];
 
       List<String> update_data = [
         client_business_name,
-        business_type_id.toString()
+        business_type_id.toString(),
+        "Rejected"
       ];
 
       request.fields['field'] = jsonEncode(update_fields);
@@ -172,14 +181,14 @@ class BusinessApi {
     }
   }
 
-   Future<Map<String, dynamic>> updateRequestBusiness(String remark,int business_id
-     ) async {
+  Future<Map<String, dynamic>> updateRequestBusiness(
+      String remark, int business_id) async {
     try {
       String token = await SharePrefs().getToken();
-    
-      Map<String,dynamic> body={
-        "remark":remark,
-        "client_business_id":business_id
+
+      Map<String, dynamic> body = {
+        "remark": remark,
+        "client_business_id": business_id
       };
 
       print(body);

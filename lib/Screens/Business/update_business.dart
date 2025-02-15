@@ -223,7 +223,7 @@ class _BusinessUpdateState extends State<BusinessUpdate> {
               Buttons().submitButton(
                   buttonText: "Click to Update Address",
                   onPressed: () {
-                    ScreenRouter.addScreen(context, Address(user_id: widget.user['user_id'].toString(), isUpdate: true,pin_code: widget.business['pin_code'],area: widget.business['area'],cluster: widget.business['cluster'],district: widget.business['district'],state: widget.business['state'],address_id: widget.business['address_id'],isBusiness: true,));
+                    ScreenRouter.addScreen(context, Address(user_id: widget.user['user_id'].toString(), isUpdate: true,pin_code: widget.business['pin_code'],landmark: widget.business['landmark'], address_line: widget.business['address_line'], area: widget.business['area'],cluster: widget.business['cluster'],district: widget.business['district'],state: widget.business['state'],address_id: widget.business['address_id'],isBusiness: true,));
                   },
                   isLoading: false)
             ],

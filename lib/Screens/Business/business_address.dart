@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sdaemployee/Services/API/Business/business_api.dart';
 import 'package:sdaemployee/Services/API/Setup/address_api.dart';
-import 'package:sdaemployee/Services/validation.dart';
 import 'package:sdaemployee/Widgets/Appbar.dart';
 import 'package:sdaemployee/Widgets/Buttons.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
@@ -10,7 +9,7 @@ import 'package:sdaemployee/Widgets/InputField.dart';
 
 // ignore: must_be_immutable
 class BusinessAddress extends StatefulWidget {
-  Map<String,dynamic> user;
+  Map<String, dynamic> user;
   String client_business_name;
   String business_type_id;
   File interiorImage;
@@ -33,6 +32,8 @@ class _BusinessAddressState extends State<BusinessAddress> {
   final TextEditingController _cluster = TextEditingController();
   final TextEditingController _district = TextEditingController();
   final TextEditingController _state = TextEditingController();
+  TextEditingController _landmark = TextEditingController();
+  TextEditingController _address_line = TextEditingController();
 
   List<dynamic> _areas = [];
   String? _selectedArea;
@@ -80,21 +81,33 @@ class _BusinessAddressState extends State<BusinessAddress> {
 
   void submitBusiness() async {
     try {
-      if (Validation().isEmpty(_pinCode.text) || _pinCode.text.length != 6) {
+      if (_landmark.text.isEmpty) {
         DialogClass().showCustomDialog(
-          context: context,
-          icon: Icons.error,
-          title: "Business",
-          message: "Entere Valid Pin Code",
-        );
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Enter Landmark");
         return;
-      } else if (Validation().isEmpty(_selectedArea)) {
+      } else if (_address_line.text.isEmpty) {
         DialogClass().showCustomDialog(
-          context: context,
-          icon: Icons.error,
-          title: "Business",
-          message: "Select Area Type",
-        );
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Enter Address");
+        return;
+      } else if (_pinCode.text.isEmpty) {
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Enter Pin Code");
+        return;
+      } else if (_selectedArea == null) {
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.error,
+            title: "Address",
+            message: "Select Area");
         return;
       }
       DialogClass().showLoadingDialog(context: context, isLoading: true);
@@ -108,7 +121,9 @@ class _BusinessAddressState extends State<BusinessAddress> {
           _selectedArea!,
           _cluster.text,
           _district.text,
-          _state.text);
+          _state.text,
+          _landmark.text,
+          _address_line.text);
       DialogClass().showLoadingDialog(context: context, isLoading: false);
 
       if (business['status']) {
@@ -165,6 +180,15 @@ class _BusinessAddressState extends State<BusinessAddress> {
                     ),
                   ),
                   SizedBox(height: 20.0),
+                  Inputfield().textFieldInput(
+                    context: context,
+                    controller: _landmark,
+                    labelText: "Landmark",
+                    hintText: "Near by location",
+                    prefixIcon: Icons.mark_as_unread,
+                    keyboardType: TextInputType.text,
+                  ),
+                  SizedBox(height: 10),
                   TextFormField(
                     onChanged: _onPinCodeChanged,
                     controller: _pinCode,
@@ -247,6 +271,16 @@ class _BusinessAddressState extends State<BusinessAddress> {
                     enabled: false,
                   ),
                   SizedBox(height: 15),
+                    Inputfield().textFieldInput(
+                  context: context,
+                  controller: _address_line,
+                  labelText: "Address Line 1",
+                  hintText: "Near by location",
+                  prefixIcon: Icons.circle,
+                  keyboardType: TextInputType.text,
+                  maxLines: 4
+                ),
+                SizedBox(height: 15),
                   Buttons().submitButton(
                       onPressed: submitBusiness, isLoading: _isLoading)
                 ],
