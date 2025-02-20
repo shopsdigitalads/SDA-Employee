@@ -202,11 +202,11 @@ class KycApi {
   }
 
   Future<Map<String, dynamic>> updateRequestKYC(
-      String remark, int kyc_id) async {
+      String remark, int user_id) async {
     try {
       String token = await SharePrefs().getToken();
 
-      Map<String, dynamic> body = {"remark": remark, "kyc_id": kyc_id};
+     Map<String, dynamic> body = {"remark": remark, "user_id":user_id};
 
       print(body);
       final uri = Uri.parse("$api_link/kyc/update_request");

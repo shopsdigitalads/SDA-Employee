@@ -1,14 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:sdaemployee/Models/User.dart';
-import 'package:sdaemployee/Screens/Ads/Upload%20Advertisement/advertisement_location.dart';
 import 'package:sdaemployee/Services/API/Advertisement/advertisement_api.dart';
-import 'package:sdaemployee/Services/API/Business/business_api.dart';
-import 'package:sdaemployee/Services/Routing/router.dart';
-import 'package:sdaemployee/Services/State/app_state.dart';
-import 'package:sdaemployee/Services/Storage/share_prefs.dart';
 import 'package:sdaemployee/Services/Upload/image_upload.dart';
 import 'package:sdaemployee/Services/Upload/video_upload.dart';
 import 'package:sdaemployee/Services/validation.dart';
@@ -16,24 +9,24 @@ import 'package:sdaemployee/Widgets/Appbar.dart';
 import 'package:sdaemployee/Widgets/Buttons.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
 import 'package:sdaemployee/Widgets/InputField.dart';
-
 // ignore: must_be_immutable
-class UploadAdvertisement extends StatefulWidget {
+class UploadSelfAdvertisement extends StatefulWidget {
+  String business_type_id;
+  List<int> display;
   Map<String,dynamic> user;
-  UploadAdvertisement({required this.user, super.key});
+  UploadSelfAdvertisement(
+      {required this.user, required this.display, required this.business_type_id, super.key});
 
   @override
-  State<UploadAdvertisement> createState() => _UploadAdvertisementState();
+  State<UploadSelfAdvertisement> createState() =>
+      _UploadSelfAdvertisementState();
 }
 
-class _UploadAdvertisementState extends State<UploadAdvertisement> {
+class _UploadSelfAdvertisementState extends State<UploadSelfAdvertisement> {
   List<dynamic> businessTypes = [];
   late int ad_id;
-  String? selectedBusinessId;
   String? selectedAdType;
   String? selectedAdGoal;
-  bool isBusinessTypesFetched = false;
-  bool _isLoading = false;
 
   TextEditingController make_ad_description = TextEditingController();
   TextEditingController endDateController = TextEditingController();
@@ -58,37 +51,6 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fetchBusinessTypes();
-    });
-  }
-
-  void fetchBusinessTypes() async {
-    try {
-      DialogClass().showLoadingDialog(context: context, isLoading: true);
-      Map<String, dynamic> res = await BusinessApi().fetchBusinessTypes();
-      DialogClass().showLoadingDialog(context: context, isLoading: false);
-
-      if (res['status']) {
-        businessTypes = res['business_type'];
-        setState(() {});
-      } else {
-        DialogClass().showCustomDialog(
-          context: context,
-          icon: Icons.error,
-          title: "Business Types",
-          message: res['message'],
-        );
-      }
-    } catch (e) {
-      DialogClass().showLoadingDialog(context: context, isLoading: false);
-      DialogClass().showCustomDialog(
-        context: context,
-        icon: Icons.error,
-        title: "Error",
-        message: "Something Went Wrong",
-      );
-    }
   }
 
   void submitAdvertisement() async {
@@ -98,14 +60,6 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
         icon: Icons.error,
         title: "Advertisement",
         message: "Enter Campaign Name",
-      );
-      return;
-    } else if (Validation().isEmpty(selectedBusinessId)) {
-      DialogClass().showCustomDialog(
-        context: context,
-        icon: Icons.error,
-        title: "Advertisement",
-        message: "Select Business Type",
       );
       return;
     } else if (selectedAdType == null || uploadedFile == null) {
@@ -148,7 +102,7 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
         message: "Please select an end date.",
       );
       return;
-    } 
+    }
 
     try {
       DialogClass().showLoadingDialog(context: context, isLoading: true);
@@ -159,24 +113,29 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
               selectedAdType!,
               make_ad_description.text.trim(),
               selectedAdGoal!,
-              selectedBusinessId!,
+              widget.business_type_id,
               startDateController.text,
               endDateController.text,
-              uploadedFile!,"0");
+              uploadedFile!,
+              "1");
       DialogClass().showLoadingDialog(context: context, isLoading: false);
-
+      print("Advertisemetn : $advertisement");
       if (advertisement['status']) {
-         User user1 = await SharePrefs().getUser();
-            user1.ads_count = user1.ads_count+1;
-            await SharePrefs().storeUser(user1);
         final res = advertisement['response'];
-        Provider.of<AppState>(context, listen: false).setIsAdUpload(true);
-        ad_id = res['ads_id'];
-        ScreenRouter.addScreen(
-            context,
-            AdvertisementLocation(
-                ad_id: res['ads_id'],
-                business_type_id: int.parse(selectedBusinessId!)),slide: true);
+        int ad_id = res['ads_id'];
+        Map<String, dynamic> displayads = await AdvertisementApi()
+            .submitDisplay(widget.display, ad_id);
+        if (displayads["status"]) {
+          DialogClass().showCustomDialog(
+              context: context,
+              icon: Icons.done,
+              title: "Self Ad",
+              message: "Ad Uploaded Succesfully!",
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              });
+        }
       } else {
         DialogClass().showCustomDialog(
           context: context,
@@ -186,25 +145,22 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
         );
       }
     } catch (e) {
+      print((e));
       DialogClass().showCustomDialog(
         context: context,
         icon: Icons.error,
         title: "Error",
         message: "Something went wrong!",
       );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    bool ad_uploaded = Provider.of<AppState>(context).getAdUpload();
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar:AppbarClass().buildSubScreenAppBar(context, "Upload Advertisement"),
+      appBar:
+          AppbarClass().buildSubScreenAppBar(context, "Upload Advertisement"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 35),
         child: Column(
@@ -242,21 +198,6 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
                 });
               },
             ),
-            const SizedBox(height: 15),
-            if (businessTypes.isNotEmpty)
-              Inputfield().buildDropdownField(
-                context: context,
-                selectedValue: selectedBusinessId,
-                items: businessTypes,
-                labelText: "Business Type",
-                onChanged: (value) {
-                  setState(() {
-                    selectedBusinessId = value;
-                  });
-                },
-                value: "business_type_id",
-                name: "business_type_name",
-              ),
             const SizedBox(height: 15),
             Inputfield().buildDropdownField(
               context: context,
@@ -306,7 +247,7 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
             ),
             const SizedBox(height: 15),
             if (selectedAdType == "IMAGE")
-               ImageUpload(
+              ImageUpload(
                 labelText: "Select an Image",
                 onImagePicked: (File? image) {
                   setState(() {
@@ -317,28 +258,17 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
             if (selectedAdType == "VIDEO")
               VideoUpload(
                 labelText: "Upload Video",
-                onVideoPicked: (file) {
+                onVideoPicked: (File? video) {
                   setState(() {
-                    uploadedFile = file;
+                    uploadedFile = video;
                   });
                 },
-                selectedVideo: uploadedFile,
               ),
             const SizedBox(height: 15),
             Buttons().submitButton(
-              buttonText: ad_uploaded ? "Next ->" : "Submit",
-              onPressed: ad_uploaded
-                  ? () {
-                      ScreenRouter.addScreen(
-                          context,
-                          AdvertisementLocation(
-                              ad_id: ad_id,
-                              business_type_id:
-                                  int.parse(selectedBusinessId!)),slide: true);
-                    }
-                  : submitAdvertisement,
-              isLoading: _isLoading,
-            ),
+                buttonText: "Submit",
+                onPressed: submitAdvertisement,
+                isLoading: false),
           ],
         ),
       ),

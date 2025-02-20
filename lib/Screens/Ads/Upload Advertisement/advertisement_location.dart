@@ -55,7 +55,9 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
       if (res['status']) {
         setState(() {
           addresses = (res['data']);
+          debugPrint(addresses.toString());
           states = addresses.keys.toList();
+          states.insert(0, "All");
         });
       } else {
         DialogClass().showCustomDialog(
@@ -91,8 +93,14 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
       selectedPinCode = null;
       selectedAreas = [];
       print(state);
-      Map<String, dynamic> d = addresses[state];
-      district = d.keys.toList();
+      if (state == "All") {
+        debugPrint("States Called");
+        selectAllStates();
+      } else {
+        Map<String, dynamic> d = addresses[state];
+        district = d.keys.toList();
+        district.insert(0, "All");
+      }
     } catch (e) {
       DialogClass().showCustomDialog(
           context: context,
@@ -110,9 +118,13 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
       selectedCluster = null;
       selectedPinCode = null;
       selectedAreas = [];
-      Map<String, dynamic> d = addresses[selectedState][district];
-      cluster = d.keys.toList();
-      print(cluster);
+      if (district == "All") {
+        selectAllDistricts(selectedState!);
+      } else {
+        Map<String, dynamic> d = addresses[selectedState][district];
+        cluster = d.keys.toList();
+        cluster.insert(0, "All");
+      }
     } catch (e) {
       DialogClass().showCustomDialog(
           context: context,
@@ -129,10 +141,15 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
       selectedPinCode = null;
       selectedAreas = [];
       print("here");
-      Map<String, dynamic> d =
-          addresses[selectedState][selectedDistrict][cluster];
-      print(d);
-      pincode = d.keys.toList();
+      if (cluster == "All") {
+        selectAllClusters(selectedState!, selectedDistrict!);
+      } else {
+        Map<String, dynamic> d =
+            addresses[selectedState][selectedDistrict][cluster];
+        print(d);
+        pincode = d.keys.toList();
+        pincode.insert(0, "All");
+      }
     } catch (e) {
       DialogClass().showCustomDialog(
           context: context,
@@ -148,10 +165,15 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
 
       selectedAreas = [];
       print(selectedCluster);
-      Map<String, dynamic> d =
-          addresses[selectedState][selectedDistrict][selectedCluster][pincode];
-      area = d.keys.toList();
-      selectedAreas.clear(); // Clear previous selections
+      if (pincode == "All") {
+        selectAllPincodes(selectedState!, selectedDistrict!, selectedCluster!);
+      } else {
+        Map<String, dynamic> d = addresses[selectedState][selectedDistrict]
+            [selectedCluster][pincode];
+        area = d.keys.toList();
+        selectedAreas.clear();
+      }
+      // Clear previous selections
     } catch (e) {
       DialogClass().showCustomDialog(
           context: context,
@@ -159,6 +181,71 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
           title: "Error",
           message: "Something Went Wrong");
     }
+  }
+
+  void selectAllStates() {
+    setState(() {
+      debugPrint("States Called");
+      selectedAddressIds.clear();
+      for (var state in addresses.keys) {
+        selectAllDistricts(state);
+      }
+    });
+  }
+
+  void selectAllDistricts(String state) {
+    debugPrint("District Called");
+    for (var district in addresses[state].keys) {
+      selectAllClusters(state, district);
+    }
+  }
+
+  void selectAllClusters(String state, String district) {
+    debugPrint("Cluster Called");
+    for (var cluster in addresses[state][district].keys) {
+      selectAllPincodes(state, district, cluster);
+    }
+  }
+
+  void selectAllPincodes(String state, String district, String cluster) {
+    debugPrint("PinCode Called");
+    for (var pincode in addresses[state][district][cluster].keys) {
+      selectAllAreas(state, district, cluster, pincode);
+    }
+  }
+
+  void selectAllAreas(
+      String state, String district, String cluster, String pincode) {
+    if (addresses[state][district][cluster][pincode] is Map) {
+      addresses[state][district][cluster][pincode].forEach((area, ids) {
+        selectedAddressIds.addAll(ids);
+        selectedAreas.add(area);
+        Map<String, String> address = {
+          "State": state,
+          "District": district,
+          "Cluster": cluster,
+          "Pincode": pincode,
+          "Area": area
+        };
+        submittedAddresses.add(address);
+      });
+    }
+    updateSelectedAreasUI();
+  }
+
+  void updateSelectedAreasUI() {
+    print(selectedAddressIds);
+    setState(() {
+      district = [];
+      cluster = [];
+      pincode = [];
+      area = [];
+      selectedDistrict = null;
+      selectedCluster = null;
+      selectedPinCode = null;
+      selectedAreas = [];
+      isSubmit = false;
+    });
   }
 
   void handleSubmit() {
@@ -196,6 +283,11 @@ class _AdvertisementLocationState extends State<AdvertisementLocation> {
           selectedAreas = [];
           isSubmit = false;
         });
+        DialogClass().showCustomDialog(
+            context: context,
+            icon: Icons.more,
+            title: "Location",
+            message: "You Can select More Locations");
       } else {
         DialogClass().showCustomDialog(
             context: context,

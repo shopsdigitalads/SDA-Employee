@@ -20,6 +20,7 @@ class _PartnerState extends State<Partner> {
   bool isBusinessLoading = true;
   Map<String, dynamic> business = {};
 
+  dynamic last_7_days_income = 0;
 
   Future<bool> fetchBusiness() async {
     try {
@@ -32,6 +33,7 @@ class _PartnerState extends State<Partner> {
 
       if (res['status']) {
         business = res['business'];
+        last_7_days_income = (res['last_7_days_income']);
          setState(() {
         isBusinessLoading = false;
       });
@@ -85,7 +87,7 @@ class _PartnerState extends State<Partner> {
                 widget.user['is_partner']==1
                         ? isBusinessLoading
                             ? Section().buildShimmerList(50, 40, 5)
-                            : PartnerDashboard(user:widget.user, businesses: business)
+                            : PartnerDashboard(last_7_days_income: last_7_days_income, user:widget.user, businesses: business)
                                 .partnerDashboard(context)
                         : Center(
                             child: Container(

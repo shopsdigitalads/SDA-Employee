@@ -54,7 +54,8 @@ class AdvertisementApi {
       String business_type_id,
       String start_date,
       String end_date,
-      File ad) async {
+      File ad,
+      String is_self_ad) async {
     try {
       print(start_date);
       print(end_date);
@@ -72,6 +73,7 @@ class AdvertisementApi {
       request.fields['ad_goal'] = ad_goal;
       request.fields['start_date'] = start_date;
       request.fields['end_date'] = end_date;
+      request.fields['is_self_ad'] = is_self_ad;
       request.fields['emp_id'] = emp.user_id.toString();
       request.fields['user_id'] = user['user_id'].toString();
       request.fields['name'] =
@@ -312,6 +314,27 @@ class AdvertisementApi {
       }
     } catch (e) {
       print("errrrrrrrrrr $e");
+      return {"status": false, "message": "Something Went Wrong"};
+    }
+  }
+
+   Future<Map<String, dynamic>> fetchSelfAdsOfUser(int user_id) async {
+    try {
+      final uri = Uri.parse("$api_link/ads/self_ads/$user_id");
+
+      String token = await SharePrefs().getToken();
+      final response = await http.get(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
+      );
+
+      final responseData = jsonDecode(response.body);
+      return responseData;
+    } catch (e) {
+      print(e);
       return {"status": false, "message": "Something Went Wrong"};
     }
   }

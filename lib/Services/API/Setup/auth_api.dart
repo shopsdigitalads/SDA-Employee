@@ -26,26 +26,39 @@ class AuthApi {
     }
   }
 
-  Future<Map<String,dynamic>> verifyOtp() async{
+  Future<Map<String, dynamic>> verifyOtp() async {
     try {
-      final Map<String,dynamic> body = {"receive": mobile_no, "otp": otp};
-     final url = Uri.parse('${api_link}/auth');
+      final Map<String, dynamic> body = {"receive": mobile_no, "otp": otp};
+      final url = Uri.parse('${api_link}/auth');
       final res = await http.put(url,
           headers: {"Content-Type": "application/json"},
           body: jsonEncode(body));
       final response_data = jsonDecode(res.body);
-      if(response_data['status']){
-        SharePrefs().storePrefs("token", response_data['token'], "String");
-        if(response_data['user_exists']){
-          Map<String,dynamic> new_user = response_data['user'];
+      if (response_data['status']) {
+        if (response_data['user_exists']) {
+          Map<String, dynamic> new_user = response_data['user'];
           print(response_data['user']);
-          User user = User(user_id: new_user["user_id"], first_name: new_user['first_name'], middle_name: new_user['middle_name'], last_name: new_user['last_name'], mobile: new_user['mobile'], email: new_user['email'], status: new_user['status'],user_count: response_data['user_count'],ads_count: response_data['ads_count'],is_active:response_data['is_active']==0?false:true);
-          print("here");
-          await SharePrefs().storeUser(user);
-          print("here");
-          SharePrefs().storePrefs("token",response_data['token'],"String");
-          print(response_data['token']);
-          SharePrefs().storePrefs("isLogin", true, "Bool");
+          if (new_user['role'] == "Employee") {
+            User user = User(
+                user_id: new_user["user_id"],
+                first_name: new_user['first_name'],
+                middle_name: new_user['middle_name'],
+                last_name: new_user['last_name'],
+                mobile: new_user['mobile'],
+                email: new_user['email'],
+                status: new_user['status'],
+                user_count: response_data['user_count'],
+                ads_count: response_data['ads_count'],
+                is_active: response_data['is_active'] == 0 ? false : true);
+            await SharePrefs().storeUser(user);
+            SharePrefs().storePrefs("token", response_data['token'], "String");
+            SharePrefs().storePrefs("isLogin", true, "Bool");
+          }else{
+            return {
+              "status":false,
+              "message":"Employee Not Register"
+            };
+          }
         }
       }
       return response_data;

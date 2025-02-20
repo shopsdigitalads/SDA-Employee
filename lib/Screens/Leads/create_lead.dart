@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:sdaemployee/Services/API/Leads/leads_api.dart';
+import 'package:sdaemployee/Services/Upload/image_upload.dart';
 import 'package:sdaemployee/Services/validation.dart';
 import 'package:sdaemployee/Widgets/Appbar.dart';
 import 'package:sdaemployee/Widgets/Buttons.dart';
@@ -24,6 +27,8 @@ class _CreateLeadState extends State<CreateLead> {
   TextEditingController follow_up_date = TextEditingController();
     TextEditingController remark = TextEditingController();
 
+  File? selected_img;
+
 
 
 
@@ -32,21 +37,14 @@ class _CreateLeadState extends State<CreateLead> {
     super.initState();
   }
 
-  void submitAdvertisement() async {
+  void submitLead() async {
     try {
       if (Validation().isEmpty(name.text) || Validation().isEmpty(contact_date.text.trim()) || Validation().isEmpty(follow_up_date.text) || Validation().isEmpty(orgnization_name.text)) {
         DialogClass().showCustomDialog(
             context: context,
             icon: Icons.error,
             title: "Leads",
-            message: "Enter Name");
-        return;
-      } else if (!Validation().validateEmail(email.text.trim())) {
-        DialogClass().showCustomDialog(
-            context: context,
-            icon: Icons.error,
-            title: "Leads",
-            message: "Enter Valid Email");
+            message: "Enter All Requird Fields");
         return;
       } else if (!Validation().validateMobile(mobile_no.text.trim())) {
         DialogClass().showCustomDialog(
@@ -56,6 +54,14 @@ class _CreateLeadState extends State<CreateLead> {
             message: "Enter Valid Mobile");
         return;
       }
+      // else if (!Validation().validateEmail(email.text.trim())) {
+      //   DialogClass().showCustomDialog(
+      //       context: context,
+      //       icon: Icons.error,
+      //       title: "Leads",
+      //       message: "Enter Valid Email");
+      //   return;
+      // } 
 
       DialogClass().showLoadingDialog(context: context, isLoading: true);
       Map<String, dynamic> lead = await LeadApi()
@@ -67,7 +73,8 @@ class _CreateLeadState extends State<CreateLead> {
               widget.lead_type,
               contact_date.text.trim(),
               follow_up_date.text.trim(),
-          remark.text.trim());
+          remark.text.trim(),
+          selected_img);
       DialogClass().showLoadingDialog(context: context, isLoading: false);
     print(lead);
       if (lead['status']) {
@@ -100,7 +107,7 @@ class _CreateLeadState extends State<CreateLead> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppbarClass().buildSubScreenAppBar(context, "Add Leads"),
+      appBar: AppbarClass().buildSubScreenAppBar(context, "Leads"),
       body: SingleChildScrollView(
         child: Container(
           padding: EdgeInsets.only(
@@ -169,6 +176,10 @@ class _CreateLeadState extends State<CreateLead> {
                     hintText: "yyyy-mm-dd",
                     prefixIcon: Icons.calendar_month,
                   ),
+                   SizedBox(height: 15.0),
+                  ImageUpload(labelText: "Visiting card", onImagePicked: (image){
+                    selected_img = image;
+                  }),
               SizedBox(height: 15.0),
               TextField(
                   controller: remark,
@@ -180,7 +191,7 @@ class _CreateLeadState extends State<CreateLead> {
                 ),
                 SizedBox(height: 15.0),
               Buttons().submitButton(
-                  onPressed: submitAdvertisement, isLoading: false)
+                  onPressed: submitLead, isLoading: false)
             ],
           ),
         ),

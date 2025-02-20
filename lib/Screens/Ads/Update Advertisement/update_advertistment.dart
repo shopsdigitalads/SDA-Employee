@@ -185,8 +185,7 @@ class _UpdateAdvertistmentState extends State<UpdateAdvertistment> {
                 },
               ),
             if (selectedAdType == "VIDEO")
-              VideoUpload().videoPickerField(
-                context: context,
+              VideoUpload(
                 labelText: "Upload Video",
                 onVideoPicked: (file) {
                   setState(() {

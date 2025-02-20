@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sdaemployee/Screens/Display%20Owner/verify_mobile.dart';
+import 'package:sdaemployee/Screens/Updatation/update_request.dart';
+import 'package:sdaemployee/Widgets/Buttons.dart';
 import 'package:sdaemployee/Widgets/Section.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sdaemployee/Screens/KYC/view_kyc.dart';
 import 'package:sdaemployee/Screens/Ads/advertistment.dart';
@@ -61,61 +62,45 @@ class _PartnerHistoryState extends State<PartnerHistory> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.white,
-    appBar: AppbarClass().buildSubScreenAppBar(context, "Partner History"),
-    body: Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: isLoading
-              ? _buildShimmerLoader()
-              : partners.isEmpty
-                  ? Section().buildEmptyState("No Partner Found", Icons.delete)
-                  : ListView.builder(
-                      itemCount: partners.length,
-                      itemBuilder: (context, index) {
-                        return _buildPartnerCard(partners[index]);
-                      },
-                    ),
-        ),
-        Positioned(
-          bottom: 20,
-          right: 20,
-          child: FloatingActionButton.extended(
-            onPressed: () {
-              // Implement the navigation to add partner screen
-              ScreenRouter.addScreen(context, VerifyDisplayOwnerMobile());
-            },
-            backgroundColor: Colors.blueAccent,
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              "Add Partner",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppbarClass().buildSubScreenAppBar(context, "Partner History"),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: isLoading
+                ?Section().buildShimmerList(50, 30, 5)
+                : partners.isEmpty
+                    ? Section()
+                        .buildEmptyState("No Partner Found", Icons.delete)
+                    : ListView.builder(
+                        itemCount: partners.length,
+                        itemBuilder: (context, index) {
+                          return _buildPartnerCard(partners[index]);
+                        },
+                      ),
+          ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                // Implement the navigation to add partner screen
+                ScreenRouter.addScreen(context, VerifyDisplayOwnerMobile());
+              },
+              backgroundColor: Colors.blueAccent,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                "Add Partner",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
-
-  Widget _buildShimmerLoader() {
-    return ListView.builder(
-      itemCount: 5,
-      itemBuilder: (_, __) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.white,
-        child: Container(
-          height: 100,
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 5),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -145,24 +130,18 @@ Widget build(BuildContext context) {
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               subtitle: Text(partner['email']),
-              trailing: _buildStatusChip(partner['status']),
+              trailing: SizedBox(
+                width: 100, // Adjust width as needed
+                child: Buttons().actionButton(title: "Update",color: Colors.green, onPressed: () {
+                  ScreenRouter.addScreen(context, UpdateRequest(user: partner));
+                }),
+              ),
             ),
             _buildInfoRow("Mobile:", partner['mobile']),
             const Divider(),
             _buildActionButtons(partner),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String status) {
-    Color statusColor = _getStatusColor(status);
-    return Chip(
-      backgroundColor: statusColor.withOpacity(0.2),
-      label: Text(
-        status,
-        style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -230,19 +209,6 @@ Widget build(BuildContext context) {
       await launchUrl(url);
     } else {
       print('Could not launch $url');
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case "On Review":
-        return Colors.orange;
-      case "Approved":
-        return Colors.green;
-      case "Rejected":
-        return Colors.red;
-      default:
-        return Colors.blueGrey;
     }
   }
 }

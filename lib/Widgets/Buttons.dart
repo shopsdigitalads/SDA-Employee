@@ -64,7 +64,7 @@ class Buttons {
   }
 
   Widget updateButton({
-    String buttonText = "Uodate",
+    String buttonText = "Update",
     required VoidCallback onPressed,
   }) {
     return Center(

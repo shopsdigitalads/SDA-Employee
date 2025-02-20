@@ -165,11 +165,12 @@ class AddressApi {
   }
 
   Future<Map<String, dynamic>> updateRequestAddress(
-      String remark, int address_id) async {
+      String remark, int user_id) async {
     try {
       String token = await SharePrefs().getToken();
 
-      Map<String, dynamic> body = {"remark": remark, "address_id": address_id};
+     Map<String, dynamic> body = {"remark": remark, "user_id":user_id};
+
 
       print(body);
       final uri = Uri.parse("$api_link/address/update_request");

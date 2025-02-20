@@ -1,101 +1,88 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sdaemployee/Widgets/Dialog.dart';
-import 'package:sdaemployee/Widgets/ErrorContainer.dart';
 import 'package:video_player/video_player.dart';
 
-class VideoUpload {
-  final ImagePicker _picker = ImagePicker();
+class VideoUpload extends StatefulWidget {
+  final String labelText;
+  final Function(File? video) onVideoPicked;
+  final File? selectedVideo;
+  final double videoHeight;
+  final double videoWidth;
 
-  Widget videoPickerField({
-    required BuildContext context,
-    required String labelText,
-    required void Function(File? video) onVideoPicked,
-    File? selectedVideo,
-    double videoHeight = 100.0,
-    double videoWidth = 100.0,
-  }) {
-    try {
-       return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          labelText,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 10),
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () async {
-                File? video = await _showVideoSourceDialog(context);
-                onVideoPicked(video);
-              },
-              child: Container(
-                height: videoHeight,
-                width: videoWidth,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey),
-                ),
-                child: selectedVideo == null
-                    ? Icon(
-                        Icons.video_library,
-                        color: Colors.grey,
-                      )
-                    : FutureBuilder<VideoPlayerController>(
-                        future: _initializeVideoController(selectedVideo),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done &&
-                              snapshot.hasData) {
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: AspectRatio(
-                                aspectRatio:
-                                    snapshot.data!.value.aspectRatio,
-                                child: VideoPlayer(snapshot.data!),
-                              ),
-                            );
-                          }
-                          return Center(child: CircularProgressIndicator());
-                        },
-                      ),
-              ),
-            ),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                selectedVideo == null
-                    ? "No video selected"
-                    : "Video selected successfully",
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-    } catch (e) {
-      DialogClass().showCustomDialog(
-          context: context,
-          icon: Icons.error,
-          title: "Error",
-          message: "Something Went Wrong");
-       return ErrorContainer(errorMessage: 'An unexpected error occurred. Please try again.');
+  const VideoUpload({
+    Key? key,
+    required this.labelText,
+    required this.onVideoPicked,
+    this.selectedVideo,
+    this.videoHeight = 100.0,
+    this.videoWidth = 100.0,
+  }) : super(key: key);
+
+  @override
+  _VideoUploadState createState() => _VideoUploadState();
+}
+
+class _VideoUploadState extends State<VideoUpload> {
+  final ImagePicker _picker = ImagePicker();
+  File? selectedVideo;
+  VideoPlayerController? _controller;
+  bool isLoading = false;
+  bool isPlaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.selectedVideo != null) {
+      _initializeVideo(widget.selectedVideo!);
     }
-   
   }
 
-  /// Show dialog to select video source
-  Future<File?> _showVideoSourceDialog(BuildContext context) async {
-    
-    try {
-      final Completer<File?> completer = Completer<File?>();
+  Future<void> _initializeVideo(File video) async {
+    _disposeController();
+    _controller = VideoPlayerController.file(video)
+      ..initialize().then((_) {
+        _controller!.setLooping(true);
+        setState(() {});
+      });
+  }
 
+  void _disposeController() {
+    _controller?.dispose();
+    _controller = null;
+  }
+
+
+
+  Future<void> _pickVideo(ImageSource source) async {
+    try {
+      setState(() => isLoading = true);
+
+      final XFile? pickedFile = await _picker.pickVideo(source: source);
+      if (pickedFile != null) {
+        File videoFile = File(pickedFile.path);
+
+        setState(() {
+          selectedVideo = videoFile;
+        });
+
+        try {
+          await _initializeVideo(videoFile);
+        } catch (e) {
+          debugPrint("Error initializing video: $e");
+        }
+
+        widget.onVideoPicked(videoFile);
+      }
+    } catch (e) {
+      debugPrint("Error picking video: $e");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  void _showVideoSourceDialog() {
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -106,32 +93,30 @@ class VideoUpload {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  "Select Source",
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 18),
-                ),
-                SizedBox(height: 12),
+                const Text("Select Source",
+                    style:
+                        TextStyle(fontWeight: FontWeight.w500, fontSize: 18)),
+                const SizedBox(height: 12),
                 ListTile(
                   leading:
-                      Icon(Icons.videocam, size: 28, color: Colors.black),
-                  title: Text("Camera",
+                      const Icon(Icons.videocam, size: 28, color: Colors.black),
+                  title: const Text("Camera",
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                  onTap: () async {
-                    final video = await _pickVideo(ImageSource.camera);
-                    Navigator.pop(context); // Close the dialog
-                    completer.complete(video);
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickVideo(ImageSource.camera);
                   },
                 ),
                 ListTile(
-                  leading: Icon(Icons.video_library, size: 28, color: Colors.black),
-                  title: Text("Gallery",
+                  leading: const Icon(Icons.video_library,
+                      size: 28, color: Colors.black),
+                  title: const Text("Gallery",
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                  onTap: () async {
-                    final video = await _pickVideo(ImageSource.gallery);
-                    Navigator.pop(context); // Close the dialog
-                    completer.complete(video);
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickVideo(ImageSource.gallery);
                   },
                 ),
               ],
@@ -140,32 +125,140 @@ class VideoUpload {
         );
       },
     );
-
-    return completer.future;
-    } catch (e) {
-      throw Exception("Error Occured");
-    }
-    
   }
 
-  /// Pick a video from the specified source
-  Future<File?> _pickVideo(ImageSource source) async {
-    try {
-      final XFile? pickedFile = await _picker.pickVideo(source: source);
-      if (pickedFile != null) {
-        return File(pickedFile.path);
-      }
-    } catch (e) {
-      debugPrint("Error picking video: $e");
-      throw Exception("Error Occured");
-    }
-    return null;
+  @override
+  void dispose() {
+    _disposeController();
+    super.dispose();
   }
 
-  /// Initialize a video player controller for the selected video
-  Future<VideoPlayerController> _initializeVideoController(File video) async {
-    VideoPlayerController controller = VideoPlayerController.file(video);
-    await controller.initialize();
-    return controller;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(widget.labelText,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            GestureDetector(
+              onTap: _showVideoSourceDialog,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    height: widget.videoHeight,
+                    width: widget.videoWidth,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: isLoading
+                        ? SizedBox(
+                            height: 10, // Set desired height
+                            width: 10, // Set desired width
+                            child: CircularProgressIndicator(),
+                          )
+                        : (selectedVideo == null
+                            ? const Icon(Icons.video_library,
+                                color: Colors.grey)
+                            : const Icon(Icons.check, color: Colors.grey)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                selectedVideo == null
+                    ? "No video selected"
+                    : "Video selected successfully",
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              ),
+            ),
+          ],
+        ),
+        if (selectedVideo != null) ...[
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (_) => Dialog(
+                  child: _controller != null && _controller!.value.isInitialized
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AspectRatio(
+                              aspectRatio: _controller!.value.aspectRatio,
+                              child: Stack(
+                                alignment: Alignment.bottomCenter,
+                                children: [
+                                  VideoPlayer(_controller!),
+                                  VideoProgressIndicator(_controller!,
+                                      allowScrubbing: true),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                  isPlaying ? Icons.pause : Icons.play_arrow,
+                                  size: 30),
+                              onPressed: () {
+                                setState(() {
+                                  if (_controller!.value.isPlaying) {
+                                    _controller!.pause();
+                                  } else {
+                                    _controller!.play();
+                                  }
+                                  isPlaying = _controller!.value.isPlaying;
+                                });
+                              },
+                            ),
+                          ],
+                        )
+                      : const Center(child: CircularProgressIndicator()),
+                ),
+              );
+            },
+            child: Container(
+              height: 200,
+              width: double.infinity,
+              child: _controller != null && _controller!.value.isInitialized
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: AspectRatio(
+                            aspectRatio: _controller!.value.aspectRatio,
+                            child: VideoPlayer(_controller!),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow,
+                              size: 50, color: Colors.white),
+                          onPressed: () {
+                            setState(() {
+                              if (_controller!.value.isPlaying) {
+                                _controller!.pause();
+                              } else {
+                                _controller!.play();
+                              }
+                              isPlaying = _controller!.value.isPlaying;
+                            });
+                          },
+                        ),
+                      ],
+                    )
+                  : const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+        ]
+      ],
+    );
   }
 }

@@ -193,4 +193,27 @@ class DisplayApi {
       return {"status": false, "Message": "Something Went Wrong"};
     }
   }
+
+   Future<Map<String,dynamic>> fetchDisplayUpdateRequest(int user_id)async{
+    try {
+     
+       String token = await SharePrefs().getToken();
+        final url = Uri.parse("$api_link/display/update_request/${user_id}");
+      final response = await http.get(
+        url,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token"
+          },
+      );
+
+      final responseData = jsonDecode(response.body);
+      return responseData;
+    } catch (e) {
+      return {
+        "status":false,
+        "message":"Error Sending Request"
+      };
+    }
+  }
 }

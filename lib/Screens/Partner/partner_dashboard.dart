@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:sdaemployee/Screens/Ads/Self%20Ads/view_self_ads.dart';
 import 'package:sdaemployee/Screens/Business/update_business.dart';
 import 'package:sdaemployee/Screens/Display/display_history.dart';
 import 'package:sdaemployee/Screens/Display/register_display.dart';
 import 'package:sdaemployee/Services/Routing/router.dart';
 import 'package:sdaemployee/Widgets/Buttons.dart';
-import 'package:sdaemployee/Widgets/Dialog.dart';
 
 class PartnerDashboard {
   Map<String, dynamic> user;
   Map<String, dynamic> businesses;
-  PartnerDashboard({required this.user, required this.businesses});
+  dynamic last_7_days_income;
+  PartnerDashboard(
+      {required this.last_7_days_income,
+      required this.user,
+      required this.businesses});
   Widget partnerDashboard(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
@@ -45,8 +49,8 @@ class PartnerDashboard {
                 _buildEarningCard(
                   screenWidth,
                   screenHeight,
-                  title: "Monthly Income",
-                  amount: "00",
+                  title: "Last 7 days Income",
+                  amount: "₹$last_7_days_income",
                   color: Colors.blueAccent,
                 ),
               ],
@@ -135,8 +139,10 @@ class PartnerDashboard {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      business['client_business_name'],
-                      style: TextStyle(
+                      business['client_business_name'].length > 25
+                          ? "${business['client_business_name'].substring(0, 25)}..."
+                          : business['client_business_name'],
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
@@ -186,7 +192,9 @@ class PartnerDashboard {
             // Bottom Button (if status is false)
             if (business['client_business_status'] == "Rejected") ...[
               SizedBox(height: 8),
-              ElevatedButton(
+              Buttons().actionButton(
+                title: "Update Business",
+                color: Colors.blueAccent,
                 onPressed: () {
                   ScreenRouter.addScreen(
                       context,
@@ -197,82 +205,52 @@ class PartnerDashboard {
                           client_business_id: business['client_business_id'],
                           business: business));
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                ),
-                child: Text(
-                  "Update Business",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              )
+            ] else if (business['client_business_status'] == "Approved") ...[
+              SizedBox(height: 8),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Buttons().actionButton(
+                      title: "Upload Display",
+                      color: Colors.blueAccent,
+                      onPressed: () {
+                        ScreenRouter.addScreen(
+                          context,
+                          RegisterDisplay(
+                            user: user,
+                            client_business_id: business['client_business_id'],
+                            client_business_name:
+                                business['client_business_name'],
+                            isUpdate: false,
+                          ),
+                        );
+                      },
+                    ),
+                    Buttons().actionButton(
+                      title: "Self Ads   ",
+                      color: Colors.purpleAccent,
+                      onPressed: () {
+                        List<int> display = [];
+                        if (business['displays'].isNotEmpty) {
+                          business['displays'].forEach((dis) {
+                            display.add(dis["display_id"]);
+                          });
+                        }
+                        ScreenRouter.addScreen(
+                            context,
+                            ViewSelfAds(
+                              user: user,
+                              display: display,
+                              business_type_id:
+                                  business['business_type_id'].toString(),
+                            ));
+                      },
+                    ),
+                  ],
                 ),
               ),
-            ] else if (business['client_business_status'] == "Approved") ...[
-              if (business['client_business_status'] == "Approved") ...[
-                SizedBox(height: 8),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Buttons().actionButton(
-                        title: "Upload Display",
-                        color: Colors.blueAccent,
-                        onPressed: () {
-                          ScreenRouter.addScreen(
-                            context,
-                            RegisterDisplay(
-                              user: user,
-                              client_business_id:
-                                  business['client_business_id'],
-                              client_business_name:
-                                  business['client_business_name'],
-                              isUpdate: false,
-                            ),
-                          );
-                        },
-                      ),
-                      (business['business_update'] == "Accepted")
-                          ? Buttons().actionButton(
-                              title: "Update",
-                              color: Colors.blueAccent,
-                              onPressed: () {
-                                ScreenRouter.addScreen(
-                                    context,
-                                    BusinessUpdate(
-                                        user: user,
-                                        client_business_name:
-                                            business['client_business_name'],
-                                        client_business_id:
-                                            business['client_business_id'],
-                                        business: business));
-                              },
-                            )
-                          : (business['business_update'] == "Rejected" ||
-                                  business['business_update'] == '')
-                              ? Buttons().actionButton(
-                                  title: "Request Update",
-                                  color: Colors.purpleAccent,
-                                  onPressed: () async {
-                                    await DialogClass().showFullScreenDialog(
-                                      context: context,
-                                      module: "Business",
-                                      id: business['client_business_id'],
-                                    );
-                                  })
-                              : Text(
-                                  "Update Request: \nSubmitted",
-                                  style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.deepPurple),
-                                ),
-                    ],
-                  ),
-                ),
-              ],
             ],
           ],
         ),
@@ -280,7 +258,7 @@ class PartnerDashboard {
     );
   }
 
-   List<Widget> _buildDisplayList(String client_business_name,
+  List<Widget> _buildDisplayList(String client_business_name,
       int client_business_id, List<dynamic> displays, BuildContext context) {
     return displays.map((display) {
       return Container(
@@ -339,8 +317,6 @@ class PartnerDashboard {
             ),
             SizedBox(height: 8),
 
-           
-
             // Display Action Button (only if inactive)
             // Display Action Button (only if inactive)
             ((display['display_status'] == "Rejected" ||
@@ -349,67 +325,34 @@ class PartnerDashboard {
                     color: Colors.orangeAccent,
                     title: "Update Display",
                     onPressed: () {
-                          ScreenRouter.addScreen(
-                              context,
-                              RegisterDisplay(
-                                user: user,
-                                isUpdate: true,
-                                client_business_id: client_business_id,
-                                client_business_name: client_business_name,
-                                display_id: display['display_id'],
-                              ));
-                        },): Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Buttons().actionButton(
-                  icon: Icons.history,
-                  title: "History",
-                  color: Colors.orangeAccent,
-                  onPressed: () {
-                    ScreenRouter.addScreen(
-                        context,
-                        DisplayHistory(
-                          display_id: display['display_id'],
-                        ));
-                  },
-                ),
-                (display['display_update'] == "Accepted")
-                    ? Buttons().actionButton(
-                        icon: Icons.refresh,
-                        title: "Update",
-                        color: Colors.green,
+                      ScreenRouter.addScreen(
+                          context,
+                          RegisterDisplay(
+                            user: user,
+                            isUpdate: true,
+                            client_business_id: client_business_id,
+                            client_business_name: client_business_name,
+                            display_id: display['display_id'],
+                          ));
+                    },
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Buttons().actionButton(
+                        icon: Icons.history,
+                        title: "History",
+                        color: Colors.orangeAccent,
                         onPressed: () {
                           ScreenRouter.addScreen(
                               context,
-                              RegisterDisplay(
-                                user: user,
-                                isUpdate: true,
-                                client_business_id: client_business_id,
-                                client_business_name: client_business_name,
+                              DisplayHistory(
                                 display_id: display['display_id'],
                               ));
                         },
-                      )
-                    : (display['display_update'] == "Submitted")
-                        ? Text(
-                            "Update Request: \nSubmitted",
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepPurple),
-                          ):  Buttons().actionButton(
-                            icon: Icons.request_page,
-                            title: "Request Update",
-                            color: Colors.purpleAccent,
-                            onPressed: () async {
-                              await DialogClass().showFullScreenDialog(
-                                  context: context,
-                                  module: "Display",
-                                  id: display['display_id']);
-                            })
-                        
-              ],
-            ),
+                      ),
+                    ],
+                  ),
           ],
         ),
       );

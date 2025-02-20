@@ -210,8 +210,7 @@ class _RegisterDisplayState extends State<RegisterDisplay> {
                 },
               ),
               SizedBox(height: 15.0),
-              VideoUpload().videoPickerField(
-                context: context,
+              VideoUpload(
                 labelText: "Upload Video",
                 selectedVideo: displayVideo, 
                 onVideoPicked: (video) {
