@@ -22,6 +22,7 @@ class KYC extends StatefulWidget {
   final File? adharBackImg;
   final File? panImg;
   final File? bankProofImg;
+   final File? profile;
   final bool isUpdate;
 
   KYC({
@@ -38,6 +39,7 @@ class KYC extends StatefulWidget {
     this.adharBackImg,
     this.panImg,
     this.bankProofImg,
+      this.profile,
     required this.isUpdate,
   });
 
@@ -54,7 +56,7 @@ class _KYCState extends State<KYC> {
   TextEditingController bank_name = TextEditingController();
   TextEditingController bank_branch_name = TextEditingController();
 
-  File? adhar_front_img, adhar_back_img, pan_img, bank_proof_img;
+  File? adhar_front_img, adhar_back_img, pan_img, bank_proof_img,profile;
   File? exteriorImage;
 
   bool _isLoading = false;
@@ -75,6 +77,7 @@ class _KYCState extends State<KYC> {
     adhar_back_img = widget.adharBackImg;
     pan_img = widget.panImg;
     bank_proof_img = widget.bankProofImg;
+     profile = widget.profile;
   }
 
   void submitKYC() async {
@@ -120,7 +123,8 @@ class _KYCState extends State<KYC> {
             acc_holder_name.text.trim(),
             acc_no.text.trim(),
             bank_proof_img!,
-            bank_branch_name.text.trim());
+            bank_branch_name.text.trim(),
+            profile!);
       } else {
         kyc = await KycApi().applyForKYC(
             widget.user,
@@ -134,7 +138,8 @@ class _KYCState extends State<KYC> {
             acc_holder_name.text,
             acc_no.text,
             bank_proof_img!,
-            bank_branch_name.text);
+            bank_branch_name.text,
+            profile!);
       }
 
       DialogClass().showLoadingDialog(context: context, isLoading: false);
@@ -153,7 +158,7 @@ class _KYCState extends State<KYC> {
         DialogClass().showCustomDialog(
             context: context,
             icon: Icons.error,
-            title: "Error Occured",
+            title: "Error",
             message: "Something Went Wrong");
       }
     } catch (e) {
@@ -191,6 +196,15 @@ class _KYCState extends State<KYC> {
                     ),
                   ),
                   SizedBox(height: 20.0),
+                    ImageUpload(
+                    labelText: "Photograph",
+                    onImagePicked: (image) {
+                      setState(() {
+                        profile = image;
+                      });
+                    },
+                  ),
+                   SizedBox(height: 15.0),
                   Inputfield().textFieldInput(
                       context: context,
                       controller: adhar_card_no,

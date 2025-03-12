@@ -100,7 +100,7 @@ class _BusinessUpdateState extends State<BusinessUpdate> {
         DialogClass().showCustomDialog(
             context: context,
             icon: Icons.error,
-            title: "Error Occured",
+            title: "Error",
             message: "Something Went Wrong");
       }
     } catch (e) {

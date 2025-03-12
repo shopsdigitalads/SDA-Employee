@@ -160,10 +160,13 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                             children: [
                               Section().buildSectionTitle("Invoice Details"),
                               Section().buildDetailRow(
-                                  "Total Cost",
-                                  "₹${adDetails!['invoice']['total_cost'] ?? "-"}",
-                                  Icons.money,
-                                  Colors.greenAccent),
+                                "Total Cost",
+                                adDetails!['invoice']['total_cost'] != null
+                                    ? "₹${double.parse(adDetails!['invoice']['total_cost'].toString()).toStringAsFixed(4)}"
+                                    : "₹-",
+                                Icons.money,
+                                Colors.greenAccent,
+                              ),
                               const SizedBox(height: 10.0),
                               Section().buildSectionTitle("Display Charges"),
                               Table(
@@ -172,9 +175,9 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                                 columnWidths: {
                                   0: FlexColumnWidth(screenWidth * 0.0029),
                                   1: FlexColumnWidth(screenWidth * 0.0027),
-                                  2: FlexColumnWidth(screenWidth * 0.0024),
-                                  3: FlexColumnWidth(screenWidth * 0.0022),
-                                  4: FlexColumnWidth(1),
+                                  2: FlexColumnWidth(screenWidth * 0.0020),
+                                  3: FlexColumnWidth(screenWidth * 0.0015),
+                                  4: FlexColumnWidth(screenWidth * 0.0031),
                                 },
                                 children: [
                                   // Table Header
@@ -185,8 +188,8 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                                       buildTableCell("Display\nType",
                                           isHeader: true),
                                       buildTableCell("Charge", isHeader: true),
-                                      buildTableCell("Count", isHeader: true),
-                                      buildTableCell("Days", isHeader: true),
+                                      buildTableCell("No", isHeader: true),
+                                      buildTableCell("Day", isHeader: true),
                                       buildTableCell("Cost", isHeader: true),
                                     ],
                                   ),
@@ -201,7 +204,9 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                                         buildTableCell(
                                             charge['display_count'].toString()),
                                         buildTableCell(charge['no_of_days']),
-                                        buildTableCell("₹${charge['cost']}"),
+                                        buildTableCell(charge['cost'] != null
+                                            ? "₹${double.parse(charge['cost'].toString()).toStringAsFixed(4)}"
+                                            : "₹-"),
                                       ],
                                     );
                                   }).toList(),
@@ -298,7 +303,9 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                   business_type_id: widget.adData['business_type_id']));
         },
       ));
-    } else if (currentDate.isBefore(endDate) && (widget.adData['ad_bill_status'] == "Unpaid" || widget.adData['ad_bill_status'] == null)) {
+    } else if (currentDate.isBefore(endDate) &&
+        (widget.adData['ad_bill_status'] == "Unpaid" ||
+            widget.adData['ad_bill_status'] == null)) {
       widgets.add(SizedBox(
         height: 10,
       ));

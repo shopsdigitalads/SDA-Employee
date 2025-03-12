@@ -3,6 +3,7 @@ import 'package:sdaemployee/Services/API/Advertisement/advertisement_api.dart';
 import 'package:sdaemployee/Widgets/Appbar.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
 import 'package:sdaemployee/Widgets/Section.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ViewAdDisplay extends StatefulWidget {
   final List<dynamic> address_ids;
@@ -36,9 +37,11 @@ class _ViewAdDisplayState extends State<ViewAdDisplay> {
       DialogClass().showLoadingDialog(context: context, isLoading: false);
 
       if (res['status']) {
+        
         setState(() {
           displays = res['displays'] ?? {};
         });
+        print(displays);
       } else {
         DialogClass().showCustomDialog(
           context: context,
@@ -61,24 +64,42 @@ class _ViewAdDisplayState extends State<ViewAdDisplay> {
     }
   }
 
+  void playVideo(String youtubeUrl) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: 300,
+            padding: const EdgeInsets.all(8.0),
+            child: YoutubePlayerWidget(youtubeUrl: youtubeUrl),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppbarClass().buildSubScreenAppBar(context, "Ad Displays"),
       body: isLoading
-          ? Container()
+          ? const Center(child: CircularProgressIndicator())
           : displays.isNotEmpty
-              ? SingleChildScrollView(
+              ? ListView.builder(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: displays.entries.map((entry) {
-                      final location = entry.key;
-                      final types = entry.value as Map<String, dynamic>;
-                      return buildLocationSection(location, types);
-                    }).toList(),
-                  ),
+                  itemCount: displays.entries.length,
+                  itemBuilder: (context, index) {
+                    final location = displays.entries.elementAt(index).key;
+                    final types =
+                        displays.entries.elementAt(index).value as Map<String, dynamic>;
+                    return buildLocationSection(location, types);
+                  },
                 )
               : const Center(
                   child: Text(
@@ -91,7 +112,7 @@ class _ViewAdDisplayState extends State<ViewAdDisplay> {
 
   Widget buildLocationSection(String location, Map<String, dynamic> types) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Section().buildSectionTitle(location),
         ...types.entries.map((typeEntry) {
@@ -105,8 +126,9 @@ class _ViewAdDisplayState extends State<ViewAdDisplay> {
   }
 
   Widget buildDisplayTypeSection(String type, List<dynamic> displays) {
-    return Section().builButtonCard(
-      [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Text(
@@ -123,7 +145,74 @@ class _ViewAdDisplayState extends State<ViewAdDisplay> {
   }
 
   Widget buildDisplayCard(Map<String, dynamic> display) {
-    return  Section().buildDetailRow("Display ID", display['display_id'].toString(),
-          Icons.smart_display_sharp, Colors.orangeAccent);
+    return Card(
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ListTile(
+        leading: const Icon(Icons.smart_display_sharp, color: Colors.orangeAccent),
+        title: Text(
+          "Display ID: ${display['display_id']}",
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          "Type: ${display['type']}",
+          style: const TextStyle(color: Colors.grey),
+        ),
+        trailing: ElevatedButton.icon(
+          icon: const Icon(Icons.play_arrow),
+          label: const Text("Play Video"),
+          onPressed: () {
+            playVideo(display['youtube_video_link']);
+          },
+        ),
+      ),
+    );
   }
+}
+
+class YoutubePlayerWidget extends StatefulWidget {
+  final String youtubeUrl;
+
+  const YoutubePlayerWidget({required this.youtubeUrl, Key? key}) : super(key: key);
+
+  @override
+  State<YoutubePlayerWidget> createState() => _YoutubePlayerWidgetState();
+}
+
+class _YoutubePlayerWidgetState extends State<YoutubePlayerWidget> {
+  late YoutubePlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final videoId = YoutubePlayer.convertUrlToId(widget.youtubeUrl);
+    _controller = YoutubePlayerController(
+      initialVideoId: videoId!,
+      flags: const YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+@override
+Widget build(BuildContext context) {
+  double screenHeight = MediaQuery.of(context).size.height;
+
+  return Container(
+    width: double.infinity,
+    height: screenHeight * 0.3, // 30% of screen height
+    child: YoutubePlayer(
+      controller: _controller,
+      showVideoProgressIndicator: true,
+    ),
+  );
+}
+
 }

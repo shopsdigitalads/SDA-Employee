@@ -182,7 +182,7 @@ class PartnerDashboard {
                 ),
               ),
             SizedBox(height: 8),
-            if (business['client_business_status'] == "Approved")
+            if (business['client_business_status'] == "Approved" || business['client_business_status'] == "On Review")
               ..._buildDisplayList(
                   business['client_business_name'],
                   business['client_business_id'],
@@ -206,7 +206,7 @@ class PartnerDashboard {
                           business: business));
                 },
               )
-            ] else if (business['client_business_status'] == "Approved") ...[
+            ] else if (business['client_business_status'] == "Approved" || business['client_business_status'] == "On Review") ...[
               SizedBox(height: 8),
               Center(
                 child: Row(

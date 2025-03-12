@@ -59,7 +59,7 @@ class _DisplayOwnerRegistrationState extends State<DisplayOwnerRegistration> {
           DialogClass().showCustomDialog(
               context: context,
               icon: Icons.error,
-              title: "Error Occured",
+              title: "Error",
               message: response['message']);
         }
       } else {
@@ -76,7 +76,7 @@ class _DisplayOwnerRegistrationState extends State<DisplayOwnerRegistration> {
       DialogClass().showCustomDialog(
           context: context,
           icon: Icons.error,
-          title: "Error Occured",
+          title: "Error",
           message: "Something Went Wrong");
     }
   }
@@ -123,7 +123,7 @@ class _DisplayOwnerRegistrationState extends State<DisplayOwnerRegistration> {
             DialogClass().showCustomDialog(
                 context: context,
                 icon: Icons.error,
-                title: "Error Occured",
+                title: "Error",
                 message: response['message']);
           }
         } else {
@@ -133,7 +133,7 @@ class _DisplayOwnerRegistrationState extends State<DisplayOwnerRegistration> {
           DialogClass().showCustomDialog(
               context: context,
               icon: Icons.error,
-              title: "Error Occured",
+              title: "Error",
               message: response['message']);
         }
       } else {
@@ -151,7 +151,7 @@ class _DisplayOwnerRegistrationState extends State<DisplayOwnerRegistration> {
       DialogClass().showCustomDialog(
           context: context,
           icon: Icons.error,
-          title: "Error Occured",
+          title: "Error",
           message: "Something Went Wrong");
     }
   }

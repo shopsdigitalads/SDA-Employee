@@ -18,7 +18,7 @@ class KycApi {
       String acc_holder_name,
       String acc_no,
       File bank_proof_img,
-      String bank_branch_name) async {
+      String bank_branch_name,File profile) async {
     try {
       String token = await SharePrefs().getToken();
 
@@ -67,6 +67,14 @@ class KycApi {
       );
       request.files.add(bank_p_img);
 
+         final pro = await http.MultipartFile.fromPath(
+        'profile', // Field name for the interior image
+        profile.path,
+        contentType: MediaType('image', 'jpeg'), // Specify the MIME type
+      );
+      request.files.add(pro);
+
+
       final response = await request.send();
 
       if (response.statusCode == 201) {
@@ -97,7 +105,7 @@ class KycApi {
       String acc_holder_name,
       String acc_no,
       File bank_proof_img,
-      String bank_branch_name) async {
+      String bank_branch_name,File profile) async {
     try {
       String token = await SharePrefs().getToken();
 
@@ -162,6 +170,14 @@ class KycApi {
         contentType: MediaType('image', 'jpeg'), // Specify the MIME type
       );
       request.files.add(bank_p_img);
+
+         final pro = await http.MultipartFile.fromPath(
+        'profile', // Field name for the interior image
+        profile.path,
+        contentType: MediaType('image', 'jpeg'), // Specify the MIME type
+      );
+      request.files.add(pro);
+
 
       final response = await request.send();
 

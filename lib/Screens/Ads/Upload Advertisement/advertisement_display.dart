@@ -21,7 +21,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
   Map<String, dynamic> data = {};
 
   List<int> selectedDisplayIds = [];
-  int total_cost = 0;
+  double total_cost = 0;
   bool isLoading = true;
 
   @override
@@ -66,12 +66,12 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
     }
   }
 
-  void updateTotalCost(int displayCharge, bool isSelected) {
+  void updateTotalCost(double? displayCharge, bool isSelected) {
     setState(() {
       if (isSelected) {
-        total_cost += displayCharge;
+        total_cost += displayCharge!;
       } else {
-        total_cost -= displayCharge;
+        total_cost -= displayCharge!;
       }
     });
   }
@@ -177,6 +177,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
                                       children: [
                                         TextButton(
                                           onPressed: () {
+                                            
                                             setState(() {
                                               for (var displayType
                                                   in shopEntry.value.values) {
@@ -188,8 +189,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
                                                     selectedDisplayIds.add(
                                                         display["display_id"]);
                                                     updateTotalCost(
-                                                        display[
-                                                            "display_charge"],
+                                                        double.tryParse(display['display_charge']),
                                                         true);
                                                   }
                                                 }
@@ -208,7 +208,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
                                                   selectedDisplayIds.remove(
                                                       display["display_id"]);
                                                   updateTotalCost(
-                                                      display["display_charge"],
+                                                       double.tryParse(display["display_charge"]),
                                                       false);
                                                 }
                                               }
@@ -277,7 +277,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
                                           Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Text(
-                                                "₹ ${typeEntry.value[0]["display_charge"]}"
+                                                "₹ ${typeEntry.value[0]["display_charge"].toString()}"
                                                     .toString()),
                                           ),
                                           Padding(
@@ -301,8 +301,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
                                                               .remove(display[
                                                                   "display_id"]);
                                                           updateTotalCost(
-                                                              display[
-                                                                  "display_charge"],
+                                                              double.tryParse(display["display_charge"]),
                                                               false);
                                                           break;
                                                         }
@@ -325,8 +324,8 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
                                                               .add(display[
                                                                   "display_id"]);
                                                           updateTotalCost(
-                                                              display[
-                                                                  "display_charge"],
+                                                              double.tryParse(display[
+                                                                  "display_charge"]),
                                                               true);
                                                           break;
                                                         }

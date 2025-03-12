@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:sdaemployee/Screens/Setup/splash.dart';
 import 'package:sdaemployee/Services/State/admin_ads_state.dart';
 import 'package:sdaemployee/Services/State/app_state.dart';
+import 'package:sdaemployee/Services/State/location_state.dart';
 
 void main() {
-  runApp(
-    MultiProvider(providers: [
-       ChangeNotifierProvider(create: (context) => AppState()), 
-       ChangeNotifierProvider(create: (context)=>AdProvider())
-    ],
-     child: MyApp()));
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => AppState()),
+    ChangeNotifierProvider(create: (context) => AdProvider()),
+    ChangeNotifierProvider(create: (context) => LocationProvider())
+  ], child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

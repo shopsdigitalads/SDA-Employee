@@ -96,7 +96,7 @@ class _AddressState extends State<Address> {
           DialogClass().showCustomDialog(
               context: context,
               icon: Icons.error,
-              title: "Error Occured",
+              title: "Error",
               message: "Something Went Wrong");
         }
       }

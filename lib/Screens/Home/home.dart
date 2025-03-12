@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sdaemployee/Models/User.dart';
 import 'package:sdaemployee/Screens/Leads/view_leads.dart';
+import 'package:sdaemployee/Screens/Location.dart/location2.dart';
 import 'package:sdaemployee/Screens/Partner/partner_history.dart';
 import 'package:sdaemployee/Services/Routing/router.dart';
 import 'package:sdaemployee/Services/State/admin_ads_state.dart';
@@ -195,6 +196,37 @@ class _HomeState extends State<Home> {
                       'Leads',
                       Icons.trending_up,
                       () => ScreenRouter.addScreen(context, Leads()),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Bike Advertisement',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildActionButton(
+                      'Upload Bike Ad',
+                      Icons.handshake,
+                      () => ScreenRouter.addScreen(context, PartnerHistory()),
+                    ),
+                    _buildActionButton(
+                      'Ride Bike Ad',
+                      Icons.trending_up,
+                      () => ScreenRouter.addScreen(context,LocationEmployee()),
                     ),
                   ],
                 ),

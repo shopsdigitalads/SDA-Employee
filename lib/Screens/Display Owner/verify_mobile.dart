@@ -7,10 +7,7 @@ import 'package:sdaemployee/Services/validation.dart';
 import 'package:sdaemployee/Widgets/Appbar.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
 import 'package:sdaemployee/Widgets/InputField.dart';
-import 'package:sdaemployee/Widgets/Section.dart';
 import 'dart:async';
-
-import '../../Widgets/Buttons.dart';
 
 class VerifyDisplayOwnerMobile extends StatefulWidget {
   const VerifyDisplayOwnerMobile({Key? key}) : super(key: key);
@@ -21,9 +18,10 @@ class VerifyDisplayOwnerMobile extends StatefulWidget {
 }
 
 class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
+  bool otpSend = false;
+  bool isMobileEdit = true;
   late AuthApi authApi;
   bool _isLoading = false;
-  bool _isOTPVisible = false;
   bool _isResendVisible = false;
   int _timerSeconds = 120;
   late Timer _timer;
@@ -36,11 +34,13 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
         setState(() {
           _isLoading = true;
         });
-        Map<String, dynamic> response = await RegisterApi().sendOtp("Mobile",_mobileController.text);
+        Map<String, dynamic> response =
+            await RegisterApi().sendOtp("Mobile", _mobileController.text);
         if (response['status']) {
           setState(() {
             _isLoading = false;
-            _isOTPVisible = true;
+            otpSend = true;
+            isMobileEdit = false;
             _startTimer();
           });
         } else {
@@ -50,7 +50,7 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
           DialogClass().showCustomDialog(
               context: context,
               icon: Icons.error,
-              title: "Error Occured",
+              title: "Error",
               message: response['message']);
         }
       } else {
@@ -67,7 +67,7 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
       DialogClass().showCustomDialog(
           context: context,
           icon: Icons.error,
-          title: "Error Occured",
+          title: "Error",
           message: "Something Went Wrong!");
     }
   }
@@ -79,22 +79,27 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
           _isLoading = true;
         });
 
-        Map<String, dynamic> response = await RegisterApi().verifyOtp(_mobileController.text,_otpController.text);
+        Map<String, dynamic> response = await RegisterApi()
+            .verifyOtp(_mobileController.text, _otpController.text);
         if (response['status']) {
           setState(() {
             _isLoading = false;
           });
           if (response['user_exists']) {
-              DialogClass().showCustomDialog(
-                  context: context,
-                  icon: Icons.abc,
-                  title: "Already Exists",
-                  message: "User with given mobile no already exists");
-              return;
+            DialogClass().showCustomDialog(
+                context: context,
+                icon: Icons.abc,
+                title: "Already Exists",
+                message: "User with given mobile no already exists");
+            return;
           } else {
-           ScreenRouter.addScreen(context,DisplayOwnerRegistration(mobile_no: _mobileController.text,));
+            ScreenRouter.addScreen(
+                context,
+                DisplayOwnerRegistration(
+                  mobile_no: _mobileController.text,
+                ));
             setState(() {
-              _isOTPVisible = false;
+              _isLoading = false;
             });
           }
         } else {
@@ -105,7 +110,7 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
           DialogClass().showCustomDialog(
               context: context,
               icon: Icons.error,
-              title: "Error Occured",
+              title: "Error",
               message: response['message']);
         }
       } else {
@@ -123,7 +128,7 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
       DialogClass().showCustomDialog(
           context: context,
           icon: Icons.error,
-          title: "Error Occured",
+          title: "Error",
           message: "Something Went Wrong!");
     }
   }
@@ -160,34 +165,43 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
     super.dispose();
   }
 
+  void editNumber() {
+    setState(() {
+      isMobileEdit = true;
+      otpSend = false;
+      _otpController.clear();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppbarClass().buildSubScreenAppBar(context, "Verify Mobile"),
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 35),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset('assets/logo1.png', height: 100),
-              Section().buildSectionTitle("Shop Digital Ads"),
-
-              Section().buildSectionTitle("Enter Mobile NO"),
-              SizedBox(height: 20.0),
-              !_isOTPVisible
-                  ? Inputfield().textFieldInput(
-                      context: context,
-                      controller: _mobileController,
-                      labelText: "Mobile",
-                      hintText: "Mobile No",
-                      prefixIcon: Icons.call,
-                      keyboardType: TextInputType.number)
-                  : Column(
-                      children: [
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    return  Scaffold(
+        appBar: AppbarClass().buildSubScreenAppBar(context, "New Partner"),
+          backgroundColor: Colors.white,
+          body: 
+              SingleChildScrollView(
+                child: Container(
+                  padding: EdgeInsets.only(
+                    top: screenHeight*0.15,
+                    left: screenWidth*.1,
+                    right:screenWidth*.1,
+                  ),
+                  child: Column(
+                    children: [
+                      Image.asset('assets/logo.png'),
+                      SizedBox(height: 30.0),
+                      Inputfield().textFieldInput(
+                          enabled: isMobileEdit,
+                          context: context,
+                          controller: _mobileController,
+                          labelText: "Mobile",
+                          hintText: "Mobile No",
+                          prefixIcon: Icons.call,
+                          keyboardType: TextInputType.number),
+                      SizedBox(height: 30.0),
+                      if (otpSend)
                         Inputfield().textFieldInput(
                           context: context,
                           controller: _otpController,
@@ -196,30 +210,81 @@ class _VerifyDisplayOwnerMobileState extends State<VerifyDisplayOwnerMobile> {
                           prefixIcon: Icons.lock,
                           hintText: "Enter OTP",
                         ),
-                        SizedBox(height: 20.0),
-                        Buttons().submitButton(
-                            onPressed: _verifyOtp, isLoading: _isLoading),
+                      SizedBox(height: 30.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                maximumSize: Size(170.0, 90.0),
+                                backgroundColor: Colors.black,
+                                minimumSize: Size(170.0, 60.0),
+                                shape: StadiumBorder(),
+                              ),
+                              onPressed: () {
+                                if (otpSend) {
+                                  _verifyOtp();
+                                } else {
+                                  _submitMobile();
+                                }
+                              },
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                //crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _isLoading
+                                      ? CircularProgressIndicator(
+                                          color: Colors.white,
+                                        )
+                                      : Text(
+                                          !otpSend ? 'Get OTP' : "Verify OTP",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                  Icon(
+                                    Icons.lock,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              )),
+                        ],
+                      ),
+                      if (otpSend) SizedBox(height: 30.0),
+                      if (otpSend)
                         Text(
                           'Time remaining: ${(_timerSeconds ~/ 60).toString().padLeft(2, '0')}:${(_timerSeconds % 60).toString().padLeft(2, '0')}',
-                          style: TextStyle(color: Colors.black),
+                          style: TextStyle(color: Colors.black87, fontSize: 14),
                         ),
-                      ],
-                    ),
-              SizedBox(height: 20.0),
-              !_isOTPVisible
-                  ? Buttons().submitButton(
-                      onPressed: _submitMobile, isLoading: _isLoading)
-                  : SizedBox.shrink(),
-              _isResendVisible
-                  ? Buttons().submitButton(
-                      onPressed: _resetTimer,
-                      isLoading: _isLoading,
-                      buttonText: "Send Again")
-                  : SizedBox.shrink(),
-            ],
-          ),
-        ),
-      ),
+                      SizedBox(height: 30.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (_isResendVisible)
+                            TextButton(
+                              onPressed: () {
+                                _resetTimer();
+                              },
+                              child: Text(
+                                'Resend OTP',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                          if (otpSend)
+                            TextButton(
+                              onPressed: () {
+                                editNumber();
+                              },
+                              child: Text(
+                                'Edit Number',
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
     );
   }
 }

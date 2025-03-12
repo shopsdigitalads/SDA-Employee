@@ -91,7 +91,7 @@ class _CreateLeadState extends State<CreateLead> {
         DialogClass().showCustomDialog(
             context: context,
             icon: Icons.error,
-            title: "Error Occured",
+            title: "Error",
             message: "Something Went Wrong");
       }
     } catch (e) {

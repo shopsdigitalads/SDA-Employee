@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sdaemployee/Models/User.dart';
 import 'package:sdaemployee/Screens/Address/view_address.dart';
 import 'package:sdaemployee/Screens/Setup/login.dart';
@@ -29,7 +30,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  Future<void> _showImageSourceDialog() async {
+    Future<void> _loadProfileImage() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final File imageFile = File('${directory.path}/profile_image.jpg');
+
+    if (imageFile.existsSync()) {
+      setState(() {
+        _profileImage = imageFile;
+      });
+    }
+  }
+
+  Future<void> _saveImageToLocalDirectory(File image) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final File newImage = File('${directory.path}/profile_image.jpg');
+
+    await image.copy(newImage.path);
+
+    setState(() {
+      _profileImage = newImage;
+    });
+  }
+
+   Future<void> _showImageSourceDialog() async {
     final File? image = await showDialog<File?>(
       context: context,
       builder: (BuildContext context) {
@@ -72,9 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (image != null) {
-      setState(() {
-        _profileImage = image;
-      });
+      await _saveImageToLocalDirectory(image);
     }
   }
 
@@ -93,6 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     getUser();
+    _loadProfileImage();
     super.initState();
   }
 

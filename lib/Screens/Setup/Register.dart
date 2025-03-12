@@ -57,7 +57,7 @@
 //           DialogClass().showCustomDialog(
 //               context: context,
 //               icon: Icons.error,
-//               title: "Error Occured",
+//               title: "Error",
 //               message: response['message']);
 //         }
 //       } else {
@@ -74,7 +74,7 @@
 //       DialogClass().showCustomDialog(
 //           context: context,
 //           icon: Icons.error,
-//           title: "Error Occured",
+//           title: "Error",
 //           message: "Something Went Wrong");
 //     }
 //   }
@@ -109,7 +109,7 @@
 //             DialogClass().showCustomDialog(
 //                 context: context,
 //                 icon: Icons.error,
-//                 title: "Error Occured",
+//                 title: "Error",
 //                 message: response['message']);
 //           }
 //         } else {
@@ -119,7 +119,7 @@
 //           DialogClass().showCustomDialog(
 //               context: context,
 //               icon: Icons.error,
-//               title: "Error Occured",
+//               title: "Error",
 //               message: response['message']);
 //         }
 //       } else {
@@ -136,7 +136,7 @@
 //       DialogClass().showCustomDialog(
 //           context: context,
 //           icon: Icons.error,
-//           title: "Error Occured",
+//           title: "Error",
 //           message: "Something Went Wrong");
 //     }
 //   }
@@ -174,7 +174,7 @@
 //         child: Container(
 //       decoration: BoxDecoration(
 //         image: DecorationImage(
-//           image: AssetImage('assets/register.jpg'),
+//           image: AssetImage('assets/register.png'),
 //           fit: BoxFit.cover,
 //         ),
 //       ),

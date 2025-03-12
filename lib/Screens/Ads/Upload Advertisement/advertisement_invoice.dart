@@ -25,14 +25,16 @@ class _AdvertisementInvoiceState extends State<AdvertisementInvoice> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-        appBar: AppbarClass().buildSubScreenAppBar(context,"Advertisement Invoice"),
+      appBar: AppbarClass()
+          .buildSubScreenAppBar(context, "Advertisement Invoice"),
       body: buildInvoiceContent(),
     );
   }
 
   Widget buildInvoiceContent() {
     final displayCharge = widget.calculationData["display_charge"] ?? [];
-    final totalCost = widget.calculationData["total_cost"] ?? 0;
+    final totalCost = double.parse(widget.calculationData["total_cost"].toString())
+        .toStringAsFixed(4);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -68,11 +70,12 @@ class _AdvertisementInvoiceState extends State<AdvertisementInvoice> {
                           ),
                         ),
                         SizedBox(height: 8),
-                        Text("Charge Per Unit: ₹ ${item['display_charge']}"),
+                        Text(
+                            "Charge Per Unit: ₹ ${double.parse(item['display_charge'].toString()).toStringAsFixed(4)}"),
                         Text("Count: ${item['display_count']}"),
                         Text("Days: ${item['no_of_days']}"),
                         Text(
-                          "Total Cost: ₹ ${item['cost']}",
+                          "Total Cost: ₹ ${double.parse(item['cost'].toString()).toStringAsFixed(4)}",
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
@@ -85,7 +88,7 @@ class _AdvertisementInvoiceState extends State<AdvertisementInvoice> {
           ),
           Divider(),
           Text(
-            "Total Cost: ₹ ${totalCost}",
+            "Total Cost: ₹ $totalCost",
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -100,7 +103,7 @@ class _AdvertisementInvoiceState extends State<AdvertisementInvoice> {
                   context: context,
                   icon: Icons.done,
                   title: "Invoice",
-                  message: "Advertisement Submited for Review",
+                  message: "Advertisement Submitted for Review",
                   onPressed: () {
                     if (widget.screen == 4) {
                       Navigator.of(context).pop();
@@ -110,7 +113,8 @@ class _AdvertisementInvoiceState extends State<AdvertisementInvoice> {
                       Navigator.of(context).pop();
                     }
                   });
-            },)
+            },
+          )
         ],
       ),
     );
