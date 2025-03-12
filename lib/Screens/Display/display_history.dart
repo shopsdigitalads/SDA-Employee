@@ -6,6 +6,7 @@ import 'package:sdaemployee/Widgets/Buttons.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
 import 'package:sdaemployee/Widgets/Section.dart';
 
+
 // ignore: must_be_immutable
 class DisplayHistory extends StatefulWidget {
   int display_id;
@@ -18,7 +19,7 @@ class DisplayHistory extends StatefulWidget {
 class _DisplayHistoryState extends State<DisplayHistory> {
   List<dynamic> displayEarnings = [];
   double totalIncome = 0;
-  double todayIncome = 0;
+  int totalAds = 0;
   bool isLoading = true;
   List<dynamic> adsList = [];
   bool _isMounted = false;
@@ -49,8 +50,8 @@ class _DisplayHistoryState extends State<DisplayHistory> {
 
       if (_isMounted) {
         if (res['status']) {
-          displayEarnings = res['display_earning'];
           adsList = res['ads_list'];
+          displayEarnings = res['display_earning'];
           calculateIncome();
         } else {
           DialogClass().showCustomDialog(
@@ -62,7 +63,7 @@ class _DisplayHistoryState extends State<DisplayHistory> {
         }
       }
     } catch (e) {
-      print(e);
+      print("Here $e");
       if (_isMounted) {
         DialogClass().showCustomDialog(
           context: context,
@@ -80,11 +81,11 @@ class _DisplayHistoryState extends State<DisplayHistory> {
 
   void calculateIncome() {
     totalIncome = 0;
-    todayIncome = 0;
-
+    totalAds = 0;
+     totalAds = adsList.length;
     for (var earning in displayEarnings) {
-      totalIncome += earning['total_earning'];
-      todayIncome += earning['ad_count']??0;
+      totalIncome +=double.parse(earning['total_earning']);
+     
     }
 
     if (_isMounted) {
@@ -118,8 +119,8 @@ class _DisplayHistoryState extends State<DisplayHistory> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildIncomeCard("Total Ads", todayIncome, Icons.trending_up, Colors.green),
-                _buildIncomeCard("Total Income", totalIncome, Icons.account_balance_wallet, Colors.blue),
+                _buildIncomeCard("Total Ads", totalAds, Icons.trending_up, Colors.green),
+                _buildIncomeCard("Total Income", "₹$totalIncome", Icons.account_balance_wallet, Colors.blue),
               ],
             ),
             const SizedBox(height: 10),
@@ -203,6 +204,7 @@ class _DisplayHistoryState extends State<DisplayHistory> {
           Text("End Date: $endDate"),
           Text("Business Type : ${ad['business_type_name']}"),
           Text("Status: ${ad['ad_status']}"),
+          Text("Ad Type: ${whichAd(ad)}"),
           if (ad['ad_description'] != null && ad['ad_description'].isNotEmpty)
             Text("Description: ${ad['ad_description']}"),
         ],
@@ -211,9 +213,20 @@ class _DisplayHistoryState extends State<DisplayHistory> {
   );
 }
 
+  String whichAd(dynamic ad){
+    String adtype;
+    if(ad['is_self_ad'] == 1){
+      adtype = "Self Ad";
+    }else if(ad['is_admin_ad'] == "without_pay"){
+      adtype = "Admin Ad";
+    }else{
+      adtype = "Client Ad";
+    }
 
+    return adtype;
+  }
   Widget _buildIncomeCard(
-      String title, double amount, IconData icon, Color color) {
+      String title, dynamic amount, IconData icon, Color color) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -234,7 +247,7 @@ class _DisplayHistoryState extends State<DisplayHistory> {
                     fontWeight: FontWeight.bold,
                     color: Colors.white)),
             const SizedBox(height: 8),
-            Text("₹$amount",
+            Text("$amount",
                 style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

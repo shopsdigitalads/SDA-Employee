@@ -4,7 +4,7 @@ import 'package:sdaemployee/Services/Routing/router.dart';
 import 'package:sdaemployee/Widgets/Buttons.dart';
 
 class AdvertisementWidget {
-  Widget buildUploadCard(BuildContext context, dynamic ad) {
+  Widget buildUploadCard(BuildContext context, dynamic ad,{showbutton = true} ) {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -55,6 +55,7 @@ class AdvertisementWidget {
             SizedBox(height: 16),
             
             // View Ad Button
+            if(showbutton)
             Center(
               child: Buttons().updateButton
               (

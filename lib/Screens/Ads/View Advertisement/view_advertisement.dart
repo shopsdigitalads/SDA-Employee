@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sdaemployee/Screens/Ads/Update%20Advertisement/update_advertistment.dart';
 import 'package:sdaemployee/Screens/Ads/Upload%20Advertisement/advertisement_location.dart';
+import 'package:sdaemployee/Screens/Ads/View%20Advertisement/make_advertisement.dart';
 import 'package:sdaemployee/Screens/Ads/View%20Advertisement/view_ad_display.dart';
 import 'package:sdaemployee/Services/API/Advertisement/advertisement_api.dart';
 import 'package:sdaemployee/Services/Routing/router.dart';
@@ -22,6 +23,7 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
   bool isLoading = false;
   Map<String, dynamic>? adDetails;
   late DateTime endDate;
+  late DateTime startDate;
   DateTime currentDate = DateTime.now();
 
   @override
@@ -30,6 +32,8 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       endDate =
           DateTime.tryParse(widget.adData['end_date'] ?? "") ?? DateTime(0);
+      startDate =
+          DateTime.tryParse(widget.adData['start_date'] ?? "") ?? DateTime(0);
       fetchAdDetails();
     });
   }
@@ -99,39 +103,9 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Section().buildSectionTitle("Advertisement Info"),
-                        Section().builButtonCard([
-                          Section().buildDetailRow(
-                              "Ad Type",
-                              widget.adData['ad_type'] ?? "-",
-                              Icons.type_specimen,
-                              Colors.orangeAccent),
-                          Section().buildDetailRow(
-                              "Goal",
-                              widget.adData['ad_goal'] ?? "-",
-                              Icons.point_of_sale,
-                              Colors.blueAccent),
-                          Section().buildDetailRow(
-                              "Start Date",
-                              widget.adData['start_date'].substring(0, 10) ??
-                                  "-",
-                              Icons.calendar_month,
-                              Colors.teal),
-                          Section().buildDetailRow(
-                              "End Date",
-                              widget.adData['end_date'].substring(0, 10) ?? "-",
-                              Icons.calendar_month,
-                              Colors.teal),
-                          Section().buildDetailRow(
-                              "Status",
-                              widget.adData['ad_status'] ?? "-",
-                              Icons.card_travel,
-                              Colors.deepPurple),
-                          Section().buildDetailRow(
-                              "Payment Status",
-                              widget.adData['ad_bill_status'] ?? "-",
-                              Icons.money,
-                              Colors.greenAccent),
-                        ]),
+                        AdvertisementWidget().buildUploadCard(
+                            context, widget.adData,
+                            showbutton: false),
                         const SizedBox(height: 20.0),
                         if (currentDate.isBefore(endDate))
                           Buttons().updateButton(
@@ -140,11 +114,7 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                               ScreenRouter.addScreen(
                                   context,
                                   UpdateAdvertistment(
-                                      ad_action:
-                                          widget.adData['ad_bill_status'] ==
-                                                  "Unpaid" ||
-                                              widget.adData['ad_bill_status'] ==
-                                                  null,
+                                      ad_action:widget.adData['ad_bill_status'] == "Unpaid" || widget.adData['ad_bill_status'] == null,
                                       ad: widget.adData));
                             },
                           ),
@@ -250,36 +220,67 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
         talukas.forEach((taluka, pinCodes) {
           pinCodes.forEach((pinCode, areas) {
             areas.forEach((area, boards) {
-              widgets.add(Section().builButtonCard(
-                [
-                  Section().buildDetailRow(
-                      "State", state, Icons.flag, Colors.deepPurple),
-                  Section().buildDetailRow(
-                      "District", district, Icons.location_city, Colors.green),
-                  Section().buildDetailRow(
-                      "Taluka", taluka, Icons.map, Colors.blueAccent),
-                  Section().buildDetailRow(
-                      "Pin Code", pinCode, Icons.location_on, Colors.teal),
-                  Section().buildDetailRow(
-                      "Area", area, Icons.place, Colors.orangeAccent),
-                  Buttons().buildListTile(
-                    icon: Icons.smart_display,
-                    title: "Display",
-                    subtitle: "View",
-                    color: Colors.orangeAccent,
-                    onTap: () {
-                      ScreenRouter.addScreen(
-                          context,
-                          ViewAdDisplay(
-                              ad_id: widget.adData['ads_id'],
-                              address_ids: boards));
-
-                      print(widget.adData['ads_id']);
-                      print(boards);
-                    },
+              widgets.add(
+                Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(2, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ));
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Location Information
+                          ListTile(
+                            leading: const Icon(Icons.location_on,
+                                color: Colors.blue),
+                            title: Text(
+                              "$state > $district > $taluka > $pinCode",
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            subtitle: Text(
+                              "Areas: $area",
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.black87),
+                            ),
+                          ),
+
+                          const Divider(),
+
+                          Buttons().updateButton(
+                            buttonText: "View Display",
+                            onPressed: () {
+                              ScreenRouter.addScreen(
+                                context,
+                                ViewAdDisplay(
+                                    ad_id: widget.adData['ads_id'],
+                                    address_ids: boards),
+                              );
+
+                              print(widget.adData['ads_id']);
+                              print(boards);
+                            },
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
             });
           });
         });
@@ -303,7 +304,7 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                   business_type_id: widget.adData['business_type_id']));
         },
       ));
-    } else if (currentDate.isBefore(endDate) &&
+    } else if (currentDate.isBefore(startDate) &&
         (widget.adData['ad_bill_status'] == "Unpaid" ||
             widget.adData['ad_bill_status'] == null)) {
       widgets.add(SizedBox(

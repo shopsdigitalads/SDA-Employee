@@ -220,6 +220,7 @@ class _UploadSelfAdvertisementState extends State<UploadSelfAdvertisement> {
               hintText: "Ad Description",
               prefixIcon: Icons.description,
               keyboardType: TextInputType.text,
+              maxLines: 5
             ),
             const SizedBox(height: 15),
             Row(
