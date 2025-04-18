@@ -107,14 +107,13 @@ class _AdDetailsScreenState extends State<AdDetailsScreen> {
                             context, widget.adData,
                             showbutton: false),
                         const SizedBox(height: 20.0),
-                        if (currentDate.isBefore(endDate))
+                        if (currentDate.isBefore(endDate) && widget.adData['ad_status'] != "Expire")
                           Buttons().updateButton(
                             buttonText: "Update Advertisement",
                             onPressed: () {
                               ScreenRouter.addScreen(
                                   context,
                                   UpdateAdvertistment(
-                                      ad_action:widget.adData['ad_bill_status'] == "Unpaid" || widget.adData['ad_bill_status'] == null,
                                       ad: widget.adData));
                             },
                           ),

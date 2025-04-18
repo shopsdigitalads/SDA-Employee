@@ -4,6 +4,7 @@ import 'package:sdaemployee/Services/API/Advertisement/advertisement_api.dart';
 import 'package:sdaemployee/Services/Routing/router.dart';
 import 'package:sdaemployee/Widgets/Appbar.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
+import 'dart:math';
 
 // ignore: must_be_immutable
 class AdvertisementDisplay extends StatefulWidget {
@@ -23,7 +24,7 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
   List<int> selectedDisplayIds = [];
   double total_cost = 0;
   bool isLoading = true;
-
+  bool isSelectedAll = false;
   @override
   void initState() {
     super.initState();
@@ -66,13 +67,32 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
     }
   }
 
-  void updateTotalCost(double? displayCharge, bool isSelected) {
-    setState(() {
-      if (isSelected) {
-        total_cost += displayCharge!;
-      } else {
-        total_cost -= displayCharge!;
-      }
+ void updateTotalCost(double? displayCharge, bool isSelected) {
+  if (displayCharge == null) return;
+
+  setState(() {
+    if (isSelected) {
+      total_cost += displayCharge;
+    } else {
+      total_cost = max(0.0, total_cost - displayCharge);
+    }
+  });
+}
+
+  void selectAllDisplayIds(Map<String, dynamic> data) {
+    selectedDisplayIds.clear(); // clear existing selection
+    total_cost = 0.0; // reset total cost
+
+    data.forEach((location, clients) {
+      clients.forEach((clientName, sections) {
+        sections.forEach((sectionType, displayList) {
+          for (var item in displayList) {
+            selectedDisplayIds.add(item['display_id']);
+            total_cost +=
+                double.tryParse(item['display_charge'].toString()) ?? 0.0;
+          }
+        });
+      });
     });
   }
 
@@ -93,11 +113,12 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
         print(res);
         if (res['status']) {
           ScreenRouter.addScreen(
-                    context,
-                    AdvertisementInvoice(
-                      calculationData: res['calculation'],
-                      screen: 4,
-                    ),slide: true);
+              context,
+              AdvertisementInvoice(
+                calculationData: res['calculation'],
+                screen: 4,
+              ),
+              slide: true);
           // DialogClass().showCustomDialog(
           //     context: context,
           //     icon: Icons.done,
@@ -143,248 +164,287 @@ class _AdvertisementDisplayState extends State<AdvertisementDisplay> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppbarClass().buildSubScreenAppBar(context, "Select Displays"),
-      body: Stack(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          !isLoading
-              ? ListView(
-                  children: data.entries.map((areaEntry) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            areaEntry.key,
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
+          Center(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                color: Colors.grey[100],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 12.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Checkbox(
+                        value: isSelectedAll,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isSelectedAll = value ?? false;
+                            if (isSelectedAll) {
+                              selectAllDisplayIds(data);
+                            } else {
+                              selectedDisplayIds.clear();
+                              total_cost = 0.0;
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        "Select All Displays",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black87,
                         ),
-                        ...areaEntry.value.entries.map((shopEntry) {
-                          return Card(
-                            margin: const EdgeInsets.all(4.0),
-                            child: Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(4.0),
-                                  child: ListTile(
-                                    title: Text(
-                                      shopEntry.key,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () {
-                                            
-                                            setState(() {
-                                              for (var displayType
-                                                  in shopEntry.value.values) {
-                                                for (var display
-                                                    in displayType) {
-                                                  if (!selectedDisplayIds
-                                                      .contains(display[
-                                                          "display_id"])) {
-                                                    selectedDisplayIds.add(
-                                                        display["display_id"]);
-                                                    updateTotalCost(
-                                                        double.tryParse(display['display_charge']),
-                                                        true);
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: !isLoading
+                ? ListView(
+                    children: data.entries.map((areaEntry) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              areaEntry.key,
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          ...areaEntry.value.entries.map((shopEntry) {
+                            return Card(
+                              margin: const EdgeInsets.all(4.0),
+                              child: Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: ListTile(
+                                      title: Text(
+                                        shopEntry.key,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                for (var displayType
+                                                    in shopEntry.value.values) {
+                                                  for (var display
+                                                      in displayType) {
+                                                    if (!selectedDisplayIds
+                                                        .contains(display[
+                                                            "display_id"])) {
+                                                      selectedDisplayIds.add(
+                                                          display[
+                                                              "display_id"]);
+                                                      updateTotalCost(
+                                                          double.tryParse(display[
+                                                              'display_charge']),
+                                                          true);
+                                                    }
                                                   }
                                                 }
-                                              }
-                                            });
-                                          },
-                                          child: const Text("Select All"),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              for (var displayType
-                                                  in shopEntry.value.values) {
-                                                for (var display
-                                                    in displayType) {
-                                                  selectedDisplayIds.remove(
-                                                      display["display_id"]);
-                                                  updateTotalCost(
-                                                       double.tryParse(display["display_charge"]),
-                                                      false);
+                                              });
+                                            },
+                                            child: const Text("Select All"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                for (var displayType
+                                                    in shopEntry.value.values) {
+                                                  for (var display
+                                                      in displayType) {
+                                                    selectedDisplayIds.remove(
+                                                        display["display_id"]);
+                                                    updateTotalCost(
+                                                        double.tryParse(display[
+                                                            "display_charge"]),
+                                                        false);
+                                                  }
                                                 }
-                                              }
-                                            });
-                                          },
-                                          child: const Text("Deselect All"),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Table(
-                                  columnWidths: {
-                                    0: FixedColumnWidth(screenWidth * 0.18),
-                                    1: FixedColumnWidth(screenWidth * 0.18),
-                                    2: FixedColumnWidth(screenWidth * 0.18),
-                                    3: FixedColumnWidth(screenWidth * 0.32),
-                                  },
-                                  border: TableBorder.all(
-                                    color: Colors.black26,
-                                    width: 1,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  children: [
-                                    TableRow(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text('Display\nType',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text('Total',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text('Charge/Day',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text('Count',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold)),
-                                        ),
-                                      ],
-                                    ),
-                                    ...shopEntry.value.entries
-                                        .map<TableRow>((typeEntry) {
-                                      return TableRow(
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(typeEntry.key),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(typeEntry.value.length
-                                                .toString()),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(
-                                                "₹ ${typeEntry.value[0]["display_charge"].toString()}"
-                                                    .toString()),
-                                          ),
-                                          Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                IconButton(
-                                                  icon:
-                                                      const Icon(Icons.remove),
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      for (var display
-                                                          in typeEntry.value) {
-                                                        if (selectedDisplayIds
-                                                            .contains(display[
-                                                                "display_id"])) {
-                                                          selectedDisplayIds
-                                                              .remove(display[
-                                                                  "display_id"]);
-                                                          updateTotalCost(
-                                                              double.tryParse(display["display_charge"]),
-                                                              false);
-                                                          break;
-                                                        }
-                                                      }
-                                                    });
-                                                  },
-                                                ),
-                                                Text(
-                                                    "${typeEntry.value.where((display) => selectedDisplayIds.contains(display["display_id"])).length}"),
-                                                IconButton(
-                                                  icon: const Icon(Icons.add),
-                                                  onPressed: () {
-                                                    setState(() {
-                                                      for (var display
-                                                          in typeEntry.value) {
-                                                        if (!selectedDisplayIds
-                                                            .contains(display[
-                                                                "display_id"])) {
-                                                          selectedDisplayIds
-                                                              .add(display[
-                                                                  "display_id"]);
-                                                          updateTotalCost(
-                                                              double.tryParse(display[
-                                                                  "display_charge"]),
-                                                              true);
-                                                          break;
-                                                        }
-                                                      }
-                                                    });
-                                                  },
-                                                ),
-                                              ],
-                                            ),
+                                              });
+                                            },
+                                            child: const Text("Deselect All"),
                                           ),
                                         ],
-                                      );
-                                    }).toList(),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                    );
-                  }).toList(),
-                )
-              : Container(),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Total/Day: ₹ ${total_cost}",
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all<Color>(
-                          Colors.black), // Corrected here
-                    ),
-                    onPressed: () {
-                      print(selectedDisplayIds);
-                      submitDisplay();
-                    },
-                    child: const Text(
-                      "Next ->",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                                      ),
+                                    ),
+                                  ),
+                                  Table(
+                                    columnWidths: {
+                                      0: FixedColumnWidth(screenWidth * 0.18),
+                                      1: FixedColumnWidth(screenWidth * 0.18),
+                                      2: FixedColumnWidth(screenWidth * 0.18),
+                                      3: FixedColumnWidth(screenWidth * 0.32),
+                                    },
+                                    border: TableBorder.all(
+                                      color: Colors.black26,
+                                      width: 1,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    children: [
+                                      TableRow(
+                                        children: [
+                                          tableHeaderCell('Display\nType'),
+                                          tableHeaderCell('Total'),
+                                          tableHeaderCell('Charge/Day'),
+                                          tableHeaderCell('Count'),
+                                        ],
+                                      ),
+                                      ...shopEntry.value.entries
+                                          .map<TableRow>((typeEntry) {
+                                        return TableRow(
+                                          children: [
+                                            tableCell(typeEntry.key),
+                                            tableCell(typeEntry.value.length
+                                                .toString()),
+                                            tableCell(
+                                                "₹ ${typeEntry.value[0]["display_charge"]}"),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.all(8.0),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                        Icons.remove),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        for (var display
+                                                            in typeEntry
+                                                                .value) {
+                                                          if (selectedDisplayIds
+                                                              .contains(display[
+                                                                  "display_id"])) {
+                                                            selectedDisplayIds
+                                                                .remove(display[
+                                                                    "display_id"]);
+                                                            updateTotalCost(
+                                                                double.tryParse(
+                                                                    display[
+                                                                        "display_charge"]),
+                                                                false);
+                                                            break;
+                                                          }
+                                                        }
+                                                      });
+                                                    },
+                                                  ),
+                                                  Text(
+                                                    "${typeEntry.value.where((display) => selectedDisplayIds.contains(display["display_id"])).length}",
+                                                  ),
+                                                  IconButton(
+                                                    icon: const Icon(Icons.add),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        for (var display
+                                                            in typeEntry
+                                                                .value) {
+                                                          if (!selectedDisplayIds
+                                                              .contains(display[
+                                                                  "display_id"])) {
+                                                            selectedDisplayIds
+                                                                .add(display[
+                                                                    "display_id"]);
+                                                            updateTotalCost(
+                                                                double.tryParse(
+                                                                    display[
+                                                                        "display_charge"]),
+                                                                true);
+                                                            break;
+                                                          }
+                                                        }
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }).toList(),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                      );
+                    }).toList(),
                   )
-                ],
-              ),
+                : Container(),
+          ),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Total/Day: ₹ $total_cost",
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor:
+                        WidgetStateProperty.all<Color>(Colors.black),
+                  ),
+                  onPressed: () {
+                    print(selectedDisplayIds);
+                    submitDisplay();
+                  },
+                  child: const Text(
+                    "Next ->",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                )
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget tableHeaderCell(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        text,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget tableCell(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(text),
     );
   }
 }

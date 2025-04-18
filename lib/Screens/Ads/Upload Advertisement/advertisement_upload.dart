@@ -17,9 +17,11 @@ import 'package:sdaemployee/Widgets/Buttons.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
 import 'package:sdaemployee/Widgets/InputField.dart';
 
+import '../../../Constant/constant.dart';
+
 // ignore: must_be_immutable
 class UploadAdvertisement extends StatefulWidget {
-  Map<String,dynamic> user;
+  Map<String, dynamic> user;
   UploadAdvertisement({required this.user, super.key});
 
   @override
@@ -34,7 +36,7 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
   String? selectedAdGoal;
   bool isBusinessTypesFetched = false;
   bool _isLoading = false;
-
+  bool? isTermCondtinChecked = false;
   TextEditingController make_ad_description = TextEditingController();
   TextEditingController endDateController = TextEditingController();
   TextEditingController startDateController = TextEditingController();
@@ -148,13 +150,13 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
         message: "Please select an end date.",
       );
       return;
-    } 
+    }
 
     try {
       DialogClass().showLoadingDialog(context: context, isLoading: true);
       Map<String, dynamic> advertisement = await AdvertisementApi()
           .submitUploadAd(
-            widget.user,
+              widget.user,
               camp_name.text.trim(),
               selectedAdType!,
               make_ad_description.text.trim(),
@@ -162,13 +164,14 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
               selectedBusinessId!,
               startDateController.text,
               endDateController.text,
-              uploadedFile!,"0");
+              uploadedFile!,
+              "0");
       DialogClass().showLoadingDialog(context: context, isLoading: false);
 
       if (advertisement['status']) {
-         User user1 = await SharePrefs().getUser();
-            user1.ads_count = user1.ads_count+1;
-            await SharePrefs().storeUser(user1);
+        User user1 = await SharePrefs().getUser();
+        user1.ads_count = user1.ads_count + 1;
+        await SharePrefs().storeUser(user1);
         final res = advertisement['response'];
         Provider.of<AppState>(context, listen: false).setIsAdUpload(true);
         ad_id = res['ads_id'];
@@ -176,7 +179,8 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
             context,
             AdvertisementLocation(
                 ad_id: res['ads_id'],
-                business_type_id: int.parse(selectedBusinessId!)),slide: true);
+                business_type_id: int.parse(selectedBusinessId!)),
+            slide: true);
       } else {
         DialogClass().showCustomDialog(
           context: context,
@@ -204,7 +208,8 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
     bool ad_uploaded = Provider.of<AppState>(context).getAdUpload();
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar:AppbarClass().buildSubScreenAppBar(context, "Upload Advertisement"),
+      appBar:
+          AppbarClass().buildSubScreenAppBar(context, "Upload Advertisement"),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 35),
         child: Column(
@@ -306,7 +311,7 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
             ),
             const SizedBox(height: 15),
             if (selectedAdType == "IMAGE")
-               ImageUpload(
+              ImageUpload(
                 labelText: "Select an Image",
                 onImagePicked: (File? image) {
                   setState(() {
@@ -325,7 +330,64 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
                 selectedVideo: uploadedFile,
               ),
             const SizedBox(height: 15),
+            Row(
+              children: [
+                Checkbox(
+                  value: isTermCondtinChecked,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      isTermCondtinChecked = value ?? false;
+                    });
+                  },
+                ),
+                Text("I agree to the "),
+                TextButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          title: Text(
+                            "Terms and Conditions",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: termsAndConditions.entries.map((entry) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 10.0),
+                                  child: Text("${entry.key}. ${entry.value}",
+                                      style: TextStyle(height: 1.5)),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text("Close"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: Text(
+                    "Terms and Conditions",
+                    style: TextStyle(decoration: TextDecoration.underline),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
             Buttons().submitButton(
+              disable: !isTermCondtinChecked!,
               buttonText: ad_uploaded ? "Next ->" : "Submit",
               onPressed: ad_uploaded
                   ? () {
@@ -333,8 +395,8 @@ class _UploadAdvertisementState extends State<UploadAdvertisement> {
                           context,
                           AdvertisementLocation(
                               ad_id: ad_id,
-                              business_type_id:
-                                  int.parse(selectedBusinessId!)),slide: true);
+                              business_type_id: int.parse(selectedBusinessId!)),
+                          slide: true);
                     }
                   : submitAdvertisement,
               isLoading: _isLoading,

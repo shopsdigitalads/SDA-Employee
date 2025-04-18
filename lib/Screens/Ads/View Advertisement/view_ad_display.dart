@@ -154,10 +154,6 @@ class _ViewAdDisplayState extends State<ViewAdDisplay> {
           "Display ID: ${display['display_id']}",
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text(
-          "Type: ${display['type']}",
-          style: const TextStyle(color: Colors.grey),
-        ),
         trailing: ElevatedButton.icon(
           icon: const Icon(Icons.play_arrow),
           label: const Text("Play Video"),

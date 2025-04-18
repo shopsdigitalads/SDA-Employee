@@ -11,11 +11,11 @@ import 'package:sdaemployee/Widgets/Buttons.dart';
 import 'package:sdaemployee/Widgets/Dialog.dart';
 import 'package:sdaemployee/Widgets/InputField.dart';
 
+
 // ignore: must_be_immutable
 class UpdateAdvertistment extends StatefulWidget {
-  bool ad_action;
   dynamic ad;
-  UpdateAdvertistment({required this.ad_action, required this.ad, super.key});
+  UpdateAdvertistment({required this.ad, super.key});
 
   @override
   State<UpdateAdvertistment> createState() => _UpdateAdvertistmentState();
@@ -37,7 +37,7 @@ class _UpdateAdvertistmentState extends State<UpdateAdvertistment> {
 
   @override
   void initState() {
-    super.initState();
+     super.initState();
   }
 
   void fetchBusinessTypes() async {
@@ -78,15 +78,16 @@ class _UpdateAdvertistmentState extends State<UpdateAdvertistment> {
       );
       return;
     }
-
     try {
       DialogClass().showLoadingDialog(context: context, isLoading: true);
-      String add_action = widget.ad_action ? "Update" : "New Add";
-      Map<String, dynamic> advertisement = await AdvertisementApi()
-          .updateUploadAd(
-              selectedAdType!, widget.ad, add_action, uploadedFile!);
+      String add_action = widget.ad['ad_status'] == "Published"? "New Add" :"Update";
+      print(add_action);
+      Map<String, dynamic> advertisement = await AdvertisementApi().updateUploadAd(
+              selectedAdType!, 
+              widget.ad, 
+              add_action, 
+              uploadedFile!);
       DialogClass().showLoadingDialog(context: context, isLoading: false);
-      print(advertisement);
       if (advertisement['status']) {
         final res = advertisement['response'];
         print(res);
@@ -187,13 +188,13 @@ class _UpdateAdvertistmentState extends State<UpdateAdvertistment> {
             if (selectedAdType == "VIDEO")
               VideoUpload(
                 labelText: "Upload Video",
-                onVideoPicked: (file) {
+                onVideoPicked: (File? video) {
                   setState(() {
-                    uploadedFile = file;
+                    uploadedFile = video;
                   });
                 },
-                selectedVideo: uploadedFile,
               ),
+
             const SizedBox(height: 15),
 
             Buttons().submitButton(
